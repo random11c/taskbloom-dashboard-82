@@ -4,7 +4,7 @@ export interface Assignment {
   id: string;
   title: string;
   description: string;
-  assignee: Coworker;
+  assignees: Coworker[];
   dueDate: Date;
   status: AssignmentStatus;
   priority: "low" | "medium" | "high";

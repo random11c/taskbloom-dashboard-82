@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Assignment, Coworker } from "@/types/assignment";
+import { X } from "lucide-react";
 
 // Mock coworkers data (in a real app, this would come from an API)
 const mockCoworkers: Coworker[] = [
@@ -33,18 +34,17 @@ const CreateAssignmentDialog = ({
 }: CreateAssignmentDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [assigneeId, setAssigneeId] = useState("");
+  const [selectedAssignees, setSelectedAssignees] = useState<Coworker[]>([]);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState<Assignment["priority"]>("medium");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const assignee = mockCoworkers.find((c) => c.id === assigneeId)!;
     const newAssignment: Assignment = {
       id: Math.random().toString(36).substr(2, 9),
       title,
       description,
-      assignee,
+      assignees: selectedAssignees,
       dueDate: new Date(dueDate),
       status: "pending",
       priority,
@@ -56,9 +56,20 @@ const CreateAssignmentDialog = ({
   const resetForm = () => {
     setTitle("");
     setDescription("");
-    setAssigneeId("");
+    setSelectedAssignees([]);
     setDueDate("");
     setPriority("medium");
+  };
+
+  const handleAddAssignee = (assigneeId: string) => {
+    const assignee = mockCoworkers.find((c) => c.id === assigneeId);
+    if (assignee && !selectedAssignees.find(a => a.id === assignee.id)) {
+      setSelectedAssignees([...selectedAssignees, assignee]);
+    }
+  };
+
+  const handleRemoveAssignee = (assigneeId: string) => {
+    setSelectedAssignees(selectedAssignees.filter(a => a.id !== assigneeId));
   };
 
   return (
@@ -91,19 +102,38 @@ const CreateAssignmentDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="assignee">Assignee</Label>
-            <Select value={assigneeId} onValueChange={setAssigneeId} required>
+            <Label>Assignees</Label>
+            <Select onValueChange={handleAddAssignee}>
               <SelectTrigger>
-                <SelectValue placeholder="Select assignee" />
+                <SelectValue placeholder="Add assignee" />
               </SelectTrigger>
               <SelectContent>
-                {mockCoworkers.map((coworker) => (
-                  <SelectItem key={coworker.id} value={coworker.id}>
-                    {coworker.name}
-                  </SelectItem>
-                ))}
+                {mockCoworkers
+                  .filter(c => !selectedAssignees.find(a => a.id === c.id))
+                  .map((coworker) => (
+                    <SelectItem key={coworker.id} value={coworker.id}>
+                      {coworker.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {selectedAssignees.map((assignee) => (
+                <div
+                  key={assignee.id}
+                  className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full"
+                >
+                  <span className="text-sm">{assignee.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAssignee(assignee.id)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">
