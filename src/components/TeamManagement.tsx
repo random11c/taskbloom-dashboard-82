@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, UserPlus, Mail } from "lucide-react";
+import { UserPlus, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,47 +9,34 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TeamMember } from "@/types/user";
 import { useToast } from "@/components/ui/use-toast";
 
 interface TeamManagementProps {
   projectId: string;
   members: TeamMember[];
-  onAddMember: (member: TeamMember) => void;
+  onInviteMember: (email: string) => void;
+  currentUser: { id: string; email: string };
 }
 
-const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps) => {
+const TeamManagement = ({ 
+  projectId, 
+  members, 
+  onInviteMember,
+  currentUser 
+}: TeamManagementProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<TeamMember["role"]>("member");
+  const [inviteEmail, setInviteEmail] = useState("");
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const newMember: TeamMember = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      role,
-      projectIds: [projectId],
-      createdAt: new Date(),
-    };
-    onAddMember(newMember);
+    onInviteMember(inviteEmail);
     setIsDialogOpen(false);
-    setEmail("");
-    setName("");
-    setRole("member");
+    setInviteEmail("");
     toast({
-      title: "Team Member Added",
-      description: "The new team member has been added to the project.",
+      title: "Invitation Sent",
+      description: `An invitation has been sent to ${inviteEmail}`,
     });
   };
 
@@ -59,7 +46,7 @@ const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps
         <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
         <Button onClick={() => setIsDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Add Member
+          Invite Member
         </Button>
       </div>
 
@@ -81,7 +68,7 @@ const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps
               </div>
             </div>
             <span className="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-700">
-              {member.role}
+              {member.id === currentUser.id ? "Admin" : "Member"}
             </span>
           </div>
         ))}
@@ -90,41 +77,19 @@ const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
+            <DialogTitle>Invite Team Member</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter member name"
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
                 placeholder="Enter member email"
                 required
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: TeamMember["role"]) => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <div className="flex justify-end gap-2">
               <Button
@@ -134,7 +99,7 @@ const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps
               >
                 Cancel
               </Button>
-              <Button type="submit">Add Member</Button>
+              <Button type="submit">Send Invite</Button>
             </div>
           </form>
         </DialogContent>

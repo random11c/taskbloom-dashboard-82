@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
-import AssignmentList from "@/components/AssignmentList";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
 import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import TeamManagement from "@/components/TeamManagement";
+import LoginForm from "@/components/LoginForm";
 import { Assignment } from "@/types/assignment";
 import { Project } from "@/types/project";
 import { TeamMember } from "@/types/user";
+import { AuthUser, LoginCredentials } from "@/types/auth";
 
 const Index = () => {
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -19,12 +22,54 @@ const Index = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const handleLogin = (credentials: LoginCredentials) => {
+    // In a real app, this would make an API call
+    const mockUser: AuthUser = {
+      id: Math.random().toString(36).substr(2, 9),
+      email: credentials.email,
+      name: credentials.email.split('@')[0],
+      createdAt: new Date(),
+    };
+    setCurrentUser(mockUser);
+    toast({
+      title: "Logged in successfully",
+      description: `Welcome back, ${mockUser.name}!`,
+    });
+  };
+
   const handleCreateProject = (project: Project) => {
-    setProjects((prev) => [...prev, project]);
-    setSelectedProjectId(project.id);
+    if (!currentUser) return;
+    
+    const newProject = {
+      ...project,
+      ownerId: currentUser.id,
+    };
+    
+    setProjects((prev) => [...prev, newProject]);
+    setSelectedProjectId(newProject.id);
+    
+    // Add creator as admin member
+    const adminMember: TeamMember = {
+      id: currentUser.id,
+      name: currentUser.name,
+      email: currentUser.email,
+      role: "admin",
+      projectIds: [newProject.id],
+      createdAt: currentUser.createdAt,
+    };
+    setTeamMembers((prev) => [...prev, adminMember]);
+    
     toast({
       title: "Project Created",
       description: "The project has been successfully created.",
+    });
+  };
+
+  const handleInviteMember = (email: string) => {
+    // In a real app, this would send an email invitation
+    toast({
+      title: "Invitation Sent",
+      description: `An invitation has been sent to ${email}`,
     });
   };
 
@@ -63,10 +108,6 @@ const Index = () => {
     });
   };
 
-  const handleAddTeamMember = (member: TeamMember) => {
-    setTeamMembers((prev) => [...prev, member]);
-  };
-
   const currentProjectAssignments = assignments.filter((assignment) =>
     projects
       .find((p) => p.id === selectedProjectId)
@@ -77,12 +118,31 @@ const Index = () => {
     member.projectIds.includes(selectedProjectId || "")
   );
 
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <LoginForm onLogin={handleLogin} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Project Dashboard
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Project Dashboard</h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600">
+              Logged in as {currentUser.email}
+            </span>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentUser(null)}
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
 
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 md:col-span-3">
@@ -115,7 +175,8 @@ const Index = () => {
                   <TeamManagement
                     projectId={selectedProjectId}
                     members={currentProjectMembers}
-                    onAddMember={handleAddTeamMember}
+                    onInviteMember={handleInviteMember}
+                    currentUser={currentUser}
                   />
                   
                   <AssignmentList
