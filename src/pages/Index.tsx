@@ -80,7 +80,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar assignments={assignments} />
+      <Sidebar />
       
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">

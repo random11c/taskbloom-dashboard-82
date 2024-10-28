@@ -72,15 +72,16 @@ const AssignmentList = ({ assignments, onStatusChange }: AssignmentListProps) =>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={assignment.assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.assignee.name)}`}
-                      alt={assignment.assignee.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <span className="text-sm text-gray-600">
-                      {assignment.assignee.name}
-                    </span>
+                  <div className="flex -space-x-2">
+                    {assignment.assignees.map((assignee) => (
+                      <img
+                        key={assignee.id}
+                        src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
+                        alt={assignee.name}
+                        className="w-8 h-8 rounded-full border-2 border-white"
+                        title={assignee.name}
+                      />
+                    ))}
                   </div>
 
                   <Select
