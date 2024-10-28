@@ -6,13 +6,16 @@ import AssignmentList from "@/components/AssignmentList";
 import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
 import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
+import TeamManagement from "@/components/TeamManagement";
 import { Assignment } from "@/types/assignment";
 import { Project } from "@/types/project";
+import { TeamMember } from "@/types/user";
 
 const Index = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
@@ -60,10 +63,18 @@ const Index = () => {
     });
   };
 
+  const handleAddTeamMember = (member: TeamMember) => {
+    setTeamMembers((prev) => [...prev, member]);
+  };
+
   const currentProjectAssignments = assignments.filter((assignment) =>
     projects
       .find((p) => p.id === selectedProjectId)
       ?.assignments.includes(assignment.id)
+  );
+
+  const currentProjectMembers = teamMembers.filter((member) =>
+    member.projectIds.includes(selectedProjectId || "")
   );
 
   return (
@@ -100,7 +111,13 @@ const Index = () => {
 
                 <DashboardStats assignments={currentProjectAssignments} />
 
-                <div className="mt-8">
+                <div className="mt-8 space-y-8">
+                  <TeamManagement
+                    projectId={selectedProjectId}
+                    members={currentProjectMembers}
+                    onAddMember={handleAddTeamMember}
+                  />
+                  
                   <AssignmentList
                     assignments={currentProjectAssignments}
                     onStatusChange={handleStatusChange}
