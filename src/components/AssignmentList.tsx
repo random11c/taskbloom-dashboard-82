@@ -74,7 +74,7 @@ const AssignmentList = ({ assignments, onStatusChange }: AssignmentListProps) =>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <img
-                      src={assignment.assignee.avatar || "https://ui-avatars.com/api/?name=" + assignment.assignee.name}
+                      src={assignment.assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.assignee.name)}`}
                       alt={assignment.assignee.name}
                       className="w-8 h-8 rounded-full"
                     />
