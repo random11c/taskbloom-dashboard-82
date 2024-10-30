@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -13,12 +13,33 @@ import { Project } from "@/types/project";
 import { TeamMember } from "@/types/user";
 
 const Index = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>(() => {
+    const savedProjects = localStorage.getItem('projects');
+    return savedProjects ? JSON.parse(savedProjects) : [];
+  });
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>(() => {
+    const savedAssignments = localStorage.getItem('assignments');
+    return savedAssignments ? JSON.parse(savedAssignments) : [];
+  });
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => {
+    const savedMembers = localStorage.getItem('teamMembers');
+    return savedMembers ? JSON.parse(savedMembers) : [];
+  });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem('projects', JSON.stringify(projects));
+  }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem('assignments', JSON.stringify(assignments));
+  }, [assignments]);
+
+  useEffect(() => {
+    localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
+  }, [teamMembers]);
 
   const handleCreateProject = (project: Project) => {
     setProjects((prev) => [...prev, project]);
@@ -150,6 +171,7 @@ const Index = () => {
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
         onCreateAssignment={handleCreateAssignment}
+        teamMembers={currentProjectMembers}
       />
     </div>
   );

@@ -13,24 +13,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Assignment, Coworker } from "@/types/assignment";
 import { X } from "lucide-react";
-
-// Mock coworkers data (in a real app, this would come from an API)
-const mockCoworkers: Coworker[] = [
-  { id: "1", name: "John Doe", email: "john@example.com" },
-  { id: "2", name: "Jane Smith", email: "jane@example.com" },
-  { id: "3", name: "Bob Johnson", email: "bob@example.com" },
-];
+import { TeamMember } from "@/types/user";
 
 interface CreateAssignmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateAssignment: (assignment: Assignment) => void;
+  teamMembers: TeamMember[];
 }
 
 const CreateAssignmentDialog = ({
   open,
   onOpenChange,
   onCreateAssignment,
+  teamMembers,
 }: CreateAssignmentDialogProps) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -62,9 +58,15 @@ const CreateAssignmentDialog = ({
   };
 
   const handleAddAssignee = (assigneeId: string) => {
-    const assignee = mockCoworkers.find((c) => c.id === assigneeId);
+    const assignee = teamMembers.find((m) => m.id === assigneeId);
     if (assignee && !selectedAssignees.find(a => a.id === assignee.id)) {
-      setSelectedAssignees([...selectedAssignees, assignee]);
+      const coworker: Coworker = {
+        id: assignee.id,
+        name: assignee.name,
+        email: assignee.email,
+        avatar: assignee.avatar
+      };
+      setSelectedAssignees([...selectedAssignees, coworker]);
     }
   };
 
@@ -108,11 +110,11 @@ const CreateAssignmentDialog = ({
                 <SelectValue placeholder="Add assignee" />
               </SelectTrigger>
               <SelectContent>
-                {mockCoworkers
-                  .filter(c => !selectedAssignees.find(a => a.id === c.id))
-                  .map((coworker) => (
-                    <SelectItem key={coworker.id} value={coworker.id}>
-                      {coworker.name}
+                {teamMembers
+                  .filter(m => !selectedAssignees.find(a => a.id === m.id))
+                  .map((member) => (
+                    <SelectItem key={member.id} value={member.id}>
+                      {member.name}
                     </SelectItem>
                   ))}
               </SelectContent>
