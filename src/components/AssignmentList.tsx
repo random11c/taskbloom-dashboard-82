@@ -8,13 +8,16 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { Trash2 } from "lucide-react";
+import { Button } from "./ui/button";
 
 interface AssignmentListProps {
   assignments: Assignment[];
   onStatusChange: (assignmentId: string, newStatus: Assignment["status"]) => void;
+  onDeleteAssignment: (assignmentId: string) => void;
 }
 
-const AssignmentList = ({ assignments, onStatusChange }: AssignmentListProps) => {
+const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment }: AssignmentListProps) => {
   const getPriorityColor = (priority: Assignment["priority"]) => {
     switch (priority) {
       case "high":
@@ -66,7 +69,7 @@ const AssignmentList = ({ assignments, onStatusChange }: AssignmentListProps) =>
                       {assignment.priority}
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      Due: {format(assignment.dueDate, "MMM d, yyyy")}
+                      Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
                     </span>
                   </div>
                 </div>
@@ -107,6 +110,15 @@ const AssignmentList = ({ assignments, onStatusChange }: AssignmentListProps) =>
                       <SelectItem value="completed">Completed</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                    onClick={() => onDeleteAssignment(assignment.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))

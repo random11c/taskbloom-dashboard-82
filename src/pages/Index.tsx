@@ -41,6 +41,20 @@ const Index = () => {
     localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
   }, [teamMembers]);
 
+  const handleDeleteAssignment = (assignmentId: string) => {
+    setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
+    setProjects((prev) =>
+      prev.map((p) => ({
+        ...p,
+        assignments: p.assignments.filter((id) => id !== assignmentId),
+      }))
+    );
+    toast({
+      title: "Assignment Deleted",
+      description: "The assignment has been successfully deleted.",
+    });
+  };
+
   const handleCreateProject = (project: Project) => {
     setProjects((prev) => [...prev, project]);
     setSelectedProjectId(project.id);
@@ -146,6 +160,7 @@ const Index = () => {
                     <AssignmentList
                       assignments={currentProjectAssignments}
                       onStatusChange={handleStatusChange}
+                      onDeleteAssignment={handleDeleteAssignment}
                     />
                   </div>
                 </>
