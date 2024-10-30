@@ -3,6 +3,9 @@ import { Assignment } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
 import { Calendar } from "@/components/ui/calendar";
+import { Comment } from "@/types/project";
+import CommentSection from "@/components/CommentSection";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CalendarPageProps {
   assignments: Assignment[];
@@ -10,6 +13,8 @@ interface CalendarPageProps {
 
 const CalendarPage = ({ assignments }: CalendarPageProps) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [comments, setComments] = useState<Comment[]>([]);
+  const { toast } = useToast();
 
   const dueTasks = assignments.filter(
     (assignment) =>
@@ -19,6 +24,27 @@ const CalendarPage = ({ assignments }: CalendarPageProps) => {
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
+  };
+
+  const handleAddComment = (assignmentId: string, content: string) => {
+    const newComment: Comment = {
+      id: Math.random().toString(36).substr(2, 9),
+      content,
+      authorId: "current-user", // In a real app, this would come from auth
+      authorName: "Current User", // In a real app, this would come from auth
+      createdAt: new Date(),
+      assignmentId
+    };
+    
+    setComments(prev => [...prev, newComment]);
+    toast({
+      title: "Comment Added",
+      description: "Your comment has been successfully added.",
+    });
+  };
+
+  const getCommentsForAssignment = (assignmentId: string) => {
+    return comments.filter(comment => comment.assignmentId === assignmentId);
   };
 
   return (
@@ -59,7 +85,7 @@ const CalendarPage = ({ assignments }: CalendarPageProps) => {
               {dueTasks.length === 0 ? (
                 <p className="text-gray-500">No tasks due on this date.</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {dueTasks.map((task) => (
                     <div
                       key={task.id}
@@ -82,6 +108,12 @@ const CalendarPage = ({ assignments }: CalendarPageProps) => {
                           </div>
                         ))}
                       </div>
+                      
+                      <CommentSection
+                        comments={getCommentsForAssignment(task.id)}
+                        assignmentId={task.id}
+                        onAddComment={(content) => handleAddComment(task.id, content)}
+                      />
                     </div>
                   ))}
                 </div>
