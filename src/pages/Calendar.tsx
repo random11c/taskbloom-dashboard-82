@@ -3,12 +3,6 @@ import { Assignment } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 
 interface CalendarPageProps {
   assignments: Assignment[];
@@ -16,7 +10,6 @@ interface CalendarPageProps {
 
 const CalendarPage = ({ assignments }: CalendarPageProps) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const dueTasks = assignments.filter(
     (assignment) =>
@@ -26,11 +19,6 @@ const CalendarPage = ({ assignments }: CalendarPageProps) => {
 
   const handleDateSelect = (newDate: Date | undefined) => {
     setDate(newDate);
-    if (newDate && assignments.some(a => 
-      new Date(a.dueDate).toDateString() === newDate.toDateString()
-    )) {
-      setIsDetailsOpen(true);
-    }
   };
 
   return (
@@ -64,47 +52,41 @@ const CalendarPage = ({ assignments }: CalendarPageProps) => {
               />
             </div>
 
-            <Sheet open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>
-                    Tasks Due {date ? format(date, "MMMM d, yyyy") : ""}
-                  </SheetTitle>
-                </SheetHeader>
-                <div className="mt-6">
-                  {dueTasks.length === 0 ? (
-                    <p className="text-gray-500">No tasks due on this date.</p>
-                  ) : (
-                    <div className="space-y-4">
-                      {dueTasks.map((task) => (
-                        <div
-                          key={task.id}
-                          className="bg-white p-4 rounded-lg border border-gray-200"
-                        >
-                          <h3 className="font-medium text-gray-900">{task.title}</h3>
-                          <p className="text-gray-500 text-sm mt-1">{task.description}</p>
-                          <div className="mt-2 flex flex-wrap gap-2">
-                            {task.assignees.map((assignee) => (
-                              <div
-                                key={assignee.id}
-                                className="flex items-center gap-2 bg-gray-100 px-2 py-1 rounded-full text-sm"
-                              >
-                                <img
-                                  src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
-                                  alt={assignee.name}
-                                  className="w-4 h-4 rounded-full"
-                                />
-                                <span>{assignee.name}</span>
-                              </div>
-                            ))}
+            <div className="bg-white p-6 rounded-lg border border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Tasks Due {date ? format(date, "MMMM d, yyyy") : ""}
+              </h2>
+              {dueTasks.length === 0 ? (
+                <p className="text-gray-500">No tasks due on this date.</p>
+              ) : (
+                <div className="space-y-4">
+                  {dueTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                    >
+                      <h3 className="font-medium text-gray-900">{task.title}</h3>
+                      <p className="text-gray-500 text-sm mt-1">{task.description}</p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {task.assignees.map((assignee) => (
+                          <div
+                            key={assignee.id}
+                            className="flex items-center gap-2 bg-white px-2 py-1 rounded-full text-sm"
+                          >
+                            <img
+                              src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
+                              alt={assignee.name}
+                              className="w-4 h-4 rounded-full"
+                            />
+                            <span>{assignee.name}</span>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
-              </SheetContent>
-            </Sheet>
+              )}
+            </div>
           </div>
         </div>
       </div>
