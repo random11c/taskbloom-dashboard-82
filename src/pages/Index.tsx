@@ -13,6 +13,7 @@ import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
@@ -21,6 +22,19 @@ const Index = () => {
 
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
+
+  const { data: isAdmin } = useQuery({
+    queryKey: ['is-admin', selectedProjectId],
+    queryFn: async () => {
+      if (!selectedProjectId) return false;
+      const { data, error } = await supabase
+        .rpc('is_project_admin', { project_id: selectedProjectId });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedProjectId,
+  });
 
   const handleCreateAssignment = async (assignment: Assignment) => {
     try {
@@ -125,12 +139,14 @@ const Index = () => {
                     <h2 className="text-xl font-semibold text-gray-900">
                       Project Details
                     </h2>
-                    <Button
-                      onClick={() => setIsCreateDialogOpen(true)}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      <Plus className="mr-2 h-4 w-4" /> Create Assignment
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        onClick={() => setIsCreateDialogOpen(true)}
+                        className="bg-primary hover:bg-primary/90"
+                      >
+                        <Plus className="mr-2 h-4 w-4" /> Create Assignment
+                      </Button>
+                    )}
                   </div>
 
                   <DashboardStats assignments={assignments} />
@@ -162,12 +178,14 @@ const Index = () => {
         </div>
       </div>
 
-      <CreateAssignmentDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        onCreateAssignment={handleCreateAssignment}
-        teamMembers={teamMembers}
-      />
+      {isAdmin && (
+        <CreateAssignmentDialog
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+          onCreateAssignment={handleCreateAssignment}
+          teamMembers={teamMembers}
+        />
+      )}
     </div>
   );
 };

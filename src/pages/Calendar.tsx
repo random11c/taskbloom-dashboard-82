@@ -12,6 +12,9 @@ interface Assignment {
   title: string;
   description: string;
   due_date: string;
+  project: {
+    name: string;
+  };
   assignees: {
     user: {
       id: string;
@@ -26,7 +29,7 @@ const CalendarPage = () => {
   const { toast } = useToast();
 
   const { data: assignments = [], isLoading } = useQuery<Assignment[]>({
-    queryKey: ['assignments', date?.toISOString()],
+    queryKey: ['calendar-assignments', date?.toISOString()],
     queryFn: async () => {
       if (!date) return [];
       
@@ -40,6 +43,7 @@ const CalendarPage = () => {
         .from('assignments')
         .select(`
           *,
+          project:projects(name),
           assignees:assignment_assignees(
             user:profiles(*)
           )
@@ -51,6 +55,19 @@ const CalendarPage = () => {
       return data;
     },
     enabled: !!date,
+  });
+
+  // Query to get all assignments for the calendar dots
+  const { data: allAssignments = [] } = useQuery<{ due_date: string }[]>({
+    queryKey: ['all-assignments'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('due_date');
+
+      if (error) throw error;
+      return data;
+    },
   });
 
   const handleDateSelect = (newDate: Date | undefined) => {
@@ -74,7 +91,7 @@ const CalendarPage = () => {
                 className="rounded-md border bg-white p-4"
                 modifiers={{
                   hasTasks: (date) => 
-                    assignments.some(
+                    allAssignments.some(
                       (assignment) => 
                         new Date(assignment.due_date).toDateString() === date.toDateString()
                     )
@@ -103,7 +120,12 @@ const CalendarPage = () => {
                       key={assignment.id}
                       className="bg-gray-50 p-4 rounded-lg border border-gray-200"
                     >
-                      <h3 className="font-medium text-gray-900">{assignment.title}</h3>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-gray-900">{assignment.title}</h3>
+                          <p className="text-sm text-gray-500">{assignment.project.name}</p>
+                        </div>
+                      </div>
                       <p className="text-gray-500 text-sm mt-1">{assignment.description}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {assignment.assignees.map(({ user }) => (
