@@ -3,23 +3,83 @@ import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Comment } from "@/types/project";
 import { format } from "date-fns";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./ui/use-toast";
 
 interface CommentSectionProps {
-  comments: Comment[];
   assignmentId: string;
-  onAddComment: (content: string) => void;
 }
 
-const CommentSection = ({ comments, assignmentId, onAddComment }: CommentSectionProps) => {
+const CommentSection = ({ assignmentId }: CommentSectionProps) => {
   const [newComment, setNewComment] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ['comments', assignmentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('comments')
+        .select(`
+          *,
+          author:profiles(name, avatar)
+        `)
+        .eq('assignment_id', assignmentId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const addCommentMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const { data, error } = await supabase
+        .from('comments')
+        .insert([
+          {
+            content,
+            assignment_id: assignmentId,
+          },
+        ])
+        .select(`
+          *,
+          author:profiles(name, avatar)
+        `)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments', assignmentId] });
+      toast({
+        title: "Comment added",
+        description: "Your comment has been added successfully.",
+      });
+      setNewComment("");
+    },
+    onError: (error) => {
+      console.error('Error adding comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newComment.trim()) {
-      onAddComment(newComment);
-      setNewComment("");
+      addCommentMutation.mutate(newComment);
     }
   };
+
+  if (isLoading) {
+    return <div>Loading comments...</div>;
+  }
 
   return (
     <div className="mt-4 space-y-4">
@@ -32,7 +92,13 @@ const CommentSection = ({ comments, assignmentId, onAddComment }: CommentSection
           placeholder="Add a comment..."
           className="min-h-[80px]"
         />
-        <Button type="submit" size="sm">Add Comment</Button>
+        <Button 
+          type="submit" 
+          size="sm"
+          disabled={addCommentMutation.isPending}
+        >
+          {addCommentMutation.isPending ? 'Adding...' : 'Add Comment'}
+        </Button>
       </form>
 
       <div className="space-y-3 mt-4">
@@ -40,13 +106,13 @@ const CommentSection = ({ comments, assignmentId, onAddComment }: CommentSection
           <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
               <img
-                src={comment.authorAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.authorName)}`}
-                alt={comment.authorName}
+                src={comment.author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author.name)}`}
+                alt={comment.author.name}
                 className="w-6 h-6 rounded-full"
               />
-              <span className="font-medium text-sm">{comment.authorName}</span>
+              <span className="font-medium text-sm">{comment.author.name}</span>
               <span className="text-gray-500 text-xs">
-                {format(new Date(comment.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                {format(new Date(comment.created_at), "MMM d, yyyy 'at' h:mm a")}
               </span>
             </div>
             <p className="text-sm text-gray-700">{comment.content}</p>
