@@ -30,7 +30,7 @@ export const useTeamMembers = (projectId: string | undefined) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.avatar,
-        role: member.role,
+        role: member.role as "admin" | "member",
         projectIds: [member.project_id],
         createdAt: new Date(member.user.created_at)
       }));

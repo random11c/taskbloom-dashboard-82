@@ -70,7 +70,7 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.avatar,
-        role: member.role,
+        role: member.role as "admin" | "member",
         isOwner: member.user.id === projectData.owner_id
       }));
     },

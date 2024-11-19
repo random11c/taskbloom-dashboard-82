@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Assignment } from "@/types/assignment";
+import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
 
 export const useAssignments = (projectId: string | undefined) => {
   return useQuery({
@@ -25,8 +25,8 @@ export const useAssignments = (projectId: string | undefined) => {
         title: assignment.title,
         description: assignment.description || "",
         dueDate: new Date(assignment.due_date),
-        status: assignment.status,
-        priority: assignment.priority,
+        status: assignment.status as AssignmentStatus,
+        priority: assignment.priority as AssignmentPriority,
         assignees: assignment.assignment_assignees?.map((aa: any) => ({
           id: aa.user.id,
           name: aa.user.name,

@@ -1,18 +1,19 @@
-export type AssignmentStatus = "pending" | "in-progress" | "completed";
+export type AssignmentStatus = 'pending' | 'in_progress' | 'completed';
+export type AssignmentPriority = 'low' | 'medium' | 'high';
 
 export interface Assignment {
   id: string;
   title: string;
   description: string;
-  assignees: Coworker[];
   dueDate: Date;
   status: AssignmentStatus;
-  priority: "low" | "medium" | "high";
+  priority: AssignmentPriority;
+  assignees: Coworker[];
 }
 
 export interface Coworker {
   id: string;
   name: string;
   email: string;
-  avatar?: string;
+  avatar: string | null;
 }
