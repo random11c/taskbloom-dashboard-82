@@ -7,11 +7,25 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface Assignment {
+  id: string;
+  title: string;
+  description: string;
+  due_date: string;
+  assignees: {
+    user: {
+      id: string;
+      name: string;
+      avatar: string | null;
+    };
+  }[];
+}
+
 const CalendarPage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { toast } = useToast();
 
-  const { data: assignments = [], isLoading } = useQuery({
+  const { data: assignments = [], isLoading } = useQuery<Assignment[]>({
     queryKey: ['assignments', date?.toISOString()],
     queryFn: async () => {
       if (!date) return [];

@@ -1,22 +1,35 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
-import { Comment } from "@/types/project";
 import { format } from "date-fns";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface CommentSectionProps {
   assignmentId: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  assignment_id: string;
+  author_id: string;
+  created_at: string;
+  author: {
+    name: string;
+    avatar: string | null;
+  };
 }
 
 const CommentSection = ({ assignmentId }: CommentSectionProps) => {
   const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const session = useSession();
 
-  const { data: comments = [], isLoading } = useQuery({
+  const { data: comments = [], isLoading } = useQuery<Comment[]>({
     queryKey: ['comments', assignmentId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -35,12 +48,15 @@ const CommentSection = ({ assignmentId }: CommentSectionProps) => {
 
   const addCommentMutation = useMutation({
     mutationFn: async (content: string) => {
+      if (!session?.user?.id) throw new Error("User not authenticated");
+      
       const { data, error } = await supabase
         .from('comments')
         .insert([
           {
             content,
             assignment_id: assignmentId,
+            author_id: session.user.id,
           },
         ])
         .select(`
