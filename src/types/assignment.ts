@@ -1,4 +1,4 @@
-export type AssignmentStatus = 'pending' | 'in_progress' | 'completed';
+export type AssignmentStatus = 'pending' | 'in-progress' | 'completed';
 export type AssignmentPriority = 'low' | 'medium' | 'high';
 
 export interface Assignment {
