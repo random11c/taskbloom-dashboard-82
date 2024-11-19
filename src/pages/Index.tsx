@@ -8,6 +8,7 @@ import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import TeamManagement from "@/components/TeamManagement";
 import Sidebar from "@/components/Sidebar";
+import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
 import { Project } from "@/types/project";
 import { TeamMember } from "@/types/user";
@@ -123,7 +124,9 @@ const Index = () => {
             Project Dashboard
           </h1>
 
-          <div className="grid grid-cols-12 gap-6">
+          <PendingInvitations />
+
+          <div className="grid grid-cols-12 gap-6 mt-8">
             <div className="col-span-12 md:col-span-3">
               <ProjectList
                 projects={projects}

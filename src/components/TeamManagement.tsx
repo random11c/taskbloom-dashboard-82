@@ -1,65 +1,65 @@
-import { useState } from "react";
-import { Plus, UserPlus, Mail } from "lucide-react";
+import { useState, useEffect } from "react";
+import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TeamMember } from "@/types/user";
-import { useToast } from "@/components/ui/use-toast";
+import InviteMemberDialog from "./InviteMemberDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  role: string;
+}
 
 interface TeamManagementProps {
   projectId: string;
-  members: TeamMember[];
-  onAddMember: (member: TeamMember) => void;
 }
 
-const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<TeamMember["role"]>("member");
-  const { toast } = useToast();
+const TeamManagement = ({ projectId }: TeamManagementProps) => {
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newMember: TeamMember = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      email,
-      role,
-      projectIds: [projectId],
-      createdAt: new Date(),
-    };
-    onAddMember(newMember);
-    setIsDialogOpen(false);
-    setEmail("");
-    setName("");
-    setRole("member");
-    toast({
-      title: "Team Member Added",
-      description: "The new team member has been added to the project.",
-    });
-  };
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ['team-members', projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('project_members')
+        .select(`
+          user_id,
+          role,
+          profiles:user_id (
+            id,
+            name,
+            email,
+            avatar
+          )
+        `)
+        .eq('project_id', projectId);
+
+      if (error) throw error;
+
+      return data.map(member => ({
+        id: member.profiles.id,
+        name: member.profiles.name,
+        email: member.profiles.email,
+        avatar: member.profiles.avatar,
+        role: member.role,
+      }));
+    },
+  });
+
+  if (isLoading) {
+    return <div>Loading team members...</div>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
-        <Button onClick={() => setIsDialogOpen(true)}>
+        <Button onClick={() => setIsInviteDialogOpen(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
-          Add Member
+          Invite Member
         </Button>
       </div>
 
@@ -85,60 +85,19 @@ const TeamManagement = ({ projectId, members, onAddMember }: TeamManagementProps
             </span>
           </div>
         ))}
+
+        {members.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No team members yet. Invite someone to get started!
+          </div>
+        )}
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Team Member</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter member name"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter member email"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value: TeamMember["role"]) => setRole(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Add Member</Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <InviteMemberDialog
+        projectId={projectId}
+        open={isInviteDialogOpen}
+        onOpenChange={setIsInviteDialogOpen}
+      />
     </div>
   );
 };
