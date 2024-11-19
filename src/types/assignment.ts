@@ -1,5 +1,5 @@
-export type AssignmentStatus = 'pending' | 'in-progress' | 'completed';
-export type AssignmentPriority = 'low' | 'medium' | 'high';
+export type AssignmentStatus = "pending" | "in-progress" | "completed";
+export type AssignmentPriority = "low" | "medium" | "high";
 
 export interface Assignment {
   id: string;
