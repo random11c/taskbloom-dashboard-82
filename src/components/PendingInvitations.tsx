@@ -10,10 +10,10 @@ interface Invitation {
   inviter_id: string;
   status: string;
   created_at: string;
-  projects: {
+  project: {
     name: string;
   };
-  profiles: {
+  inviter: {
     name: string;
   };
 }
@@ -40,14 +40,15 @@ const PendingInvitations = () => {
           inviter_id,
           status,
           created_at,
-          projects:project_id (name),
-          profiles:inviter_id (name)
+          project:projects!inner(name),
+          inviter:profiles!inner(name)
         `)
         .eq('invitee_email', user.user.email)
         .eq('status', 'pending');
 
       if (error) throw error;
-      setInvitations(data as Invitation[]);
+      
+      setInvitations(data as unknown as Invitation[]);
     } catch (error) {
       console.error('Error fetching invitations:', error);
     } finally {
@@ -90,8 +91,8 @@ const PendingInvitations = () => {
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
-          ? `You have joined ${invitation.projects.name}`
-          : `You have declined the invitation to join ${invitation.projects.name}`,
+          ? `You have joined ${invitation.project.name}`
+          : `You have declined the invitation to join ${invitation.project.name}`,
       });
     } catch (error) {
       console.error('Error handling invitation:', error);
@@ -122,7 +123,7 @@ const PendingInvitations = () => {
           >
             <div>
               <p className="font-medium">
-                {invitation.profiles.name} invited you to join {invitation.projects.name}
+                {invitation.inviter.name} invited you to join {invitation.project.name}
               </p>
               <p className="text-sm text-gray-500">
                 Sent {new Date(invitation.created_at).toLocaleDateString()}

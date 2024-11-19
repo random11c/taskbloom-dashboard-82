@@ -27,7 +27,7 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
         .from('project_members')
         .select(`
           role,
-          profiles:user_id (
+          user:profiles!inner(
             id,
             name,
             email,
@@ -39,10 +39,10 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
       if (error) throw error;
 
       return data.map(member => ({
-        id: member.profiles.id,
-        name: member.profiles.name,
-        email: member.profiles.email,
-        avatar: member.profiles.avatar,
+        id: member.user.id,
+        name: member.user.name,
+        email: member.user.email,
+        avatar: member.user.avatar,
         role: member.role,
       })) as TeamMember[];
     },

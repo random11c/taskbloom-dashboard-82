@@ -10,11 +10,126 @@ import TeamManagement from "@/components/TeamManagement";
 import Sidebar from "@/components/Sidebar";
 import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const { data: assignments = [], isLoading } = useQuery({
+    queryKey: ['assignments', selectedProjectId],
+    queryFn: async () => {
+      if (!selectedProjectId) return [];
+      const { data, error } = await supabase
+        .from('assignments')
+        .select('*')
+        .eq('project_id', selectedProjectId);
+      if (error) throw error;
+      return data as Assignment[];
+    },
+    enabled: !!selectedProjectId,
+  });
+
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ['team-members', selectedProjectId],
+    queryFn: async () => {
+      if (!selectedProjectId) return [];
+      const { data, error } = await supabase
+        .from('project_members')
+        .select(`
+          user:profiles!inner(
+            id,
+            name,
+            email,
+            avatar
+          )
+        `)
+        .eq('project_id', selectedProjectId);
+      if (error) throw error;
+      return data.map(member => member.user);
+    },
+    enabled: !!selectedProjectId,
+  });
+
+  const handleCreateAssignment = async (assignment: Assignment) => {
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .insert([
+          {
+            title: assignment.title,
+            description: assignment.description,
+            project_id: selectedProjectId,
+            due_date: assignment.dueDate,
+            status: assignment.status,
+            priority: assignment.priority,
+          },
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Assignment Created",
+        description: "Your new assignment has been created successfully.",
+      });
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create assignment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStatusChange = async (assignmentId: string, newStatus: Assignment['status']) => {
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ status: newStatus })
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Status Updated",
+        description: "Assignment status has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update status. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Assignment Deleted",
+        description: "The assignment has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Error deleting assignment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete assignment. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -51,11 +166,15 @@ const Index = () => {
                     </Button>
                   </div>
 
-                  <DashboardStats />
+                  <DashboardStats assignments={assignments} />
 
                   <div className="mt-8 space-y-8">
                     <TeamManagement projectId={selectedProjectId} />
-                    <AssignmentList />
+                    <AssignmentList 
+                      assignments={assignments}
+                      onStatusChange={handleStatusChange}
+                      onDeleteAssignment={handleDeleteAssignment}
+                    />
                   </div>
                 </>
               ) : (
@@ -79,6 +198,8 @@ const Index = () => {
       <CreateAssignmentDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
+        onCreateAssignment={handleCreateAssignment}
+        teamMembers={teamMembers}
       />
     </div>
   );
