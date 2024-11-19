@@ -21,6 +21,7 @@ const App = () => {
   useEffect(() => {
     // Initial session check
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session);
       setSession(session);
     });
 
@@ -31,21 +32,53 @@ const App = () => {
       console.log('Auth state changed:', event, session);
       
       if (event === 'SIGNED_IN') {
-        // Ensure profile exists
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session?.user?.id)
-          .single();
+        try {
+          // Ensure profile exists
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session?.user?.id)
+            .single();
 
-        if (profileError || !profile) {
-          console.error('Profile error:', profileError);
+          if (profileError) {
+            console.error('Profile error:', profileError);
+            // Create profile if it doesn't exist
+            if (profileError.code === 'PGRST116') {
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: session.user.id,
+                  email: session.user.email,
+                  name: session.user.email?.split('@')[0] || 'User',
+                });
+
+              if (insertError) {
+                console.error('Profile creation error:', insertError);
+                toast({
+                  title: "Error",
+                  description: "There was an error setting up your profile. Please try again.",
+                  variant: "destructive"
+                });
+                await supabase.auth.signOut();
+                return;
+              }
+            } else {
+              toast({
+                title: "Error",
+                description: "There was an error accessing your profile. Please try again.",
+                variant: "destructive"
+              });
+              await supabase.auth.signOut();
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Profile setup error:', error);
           toast({
             title: "Error",
-            description: "There was an error setting up your profile. Please try again.",
+            description: "An unexpected error occurred. Please try again.",
             variant: "destructive"
           });
-          // Sign out the user if profile creation failed
           await supabase.auth.signOut();
           return;
         }
@@ -55,7 +88,7 @@ const App = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   return (
     <SessionContextProvider supabaseClient={supabase}>
