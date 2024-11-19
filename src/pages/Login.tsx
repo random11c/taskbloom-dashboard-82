@@ -1,7 +1,7 @@
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 const LoginPage = () => {
   const { toast } = useToast();
@@ -19,14 +19,6 @@ const LoginPage = () => {
           appearance={{ theme: ThemeSupa }}
           theme="light"
           providers={[]}
-          onError={(error) => {
-            console.error('Auth error:', error);
-            toast({
-              title: "Authentication Error",
-              description: error.message,
-              variant: "destructive"
-            });
-          }}
           localization={{
             variables: {
               sign_up: {
