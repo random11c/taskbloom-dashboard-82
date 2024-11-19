@@ -11,40 +11,89 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Project } from "@/types/project";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface ProjectListProps {
-  projects: Project[];
-  onCreateProject: (project: Project) => void;
   onSelectProject: (projectId: string) => void;
   selectedProjectId?: string;
 }
 
 const ProjectList = ({
-  projects,
-  onCreateProject,
   onSelectProject,
   selectedProjectId,
 }: ProjectListProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Fetch projects
+  const { data: projects = [], isLoading } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching projects:', error);
+        throw error;
+      }
+
+      return data;
+    },
+  });
+
+  // Create project mutation
+  const createProjectMutation = useMutation({
+    mutationFn: async (newProject: { name: string; description: string | null }) => {
+      const { data, error } = await supabase
+        .from('projects')
+        .insert([
+          {
+            name: newProject.name,
+            description: newProject.description,
+            owner_id: (await supabase.auth.getUser()).data.user?.id,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      toast({
+        title: "Project Created",
+        description: "Your new project has been created successfully.",
+      });
+      setIsCreateDialogOpen(false);
+      setName("");
+      setDescription("");
+    },
+    onError: (error) => {
+      console.error('Project creation error:', error);
+      toast({
+        title: "Error",
+        description: "There was an error creating your project. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newProject: Project = {
-      id: Math.random().toString(36).substr(2, 9),
-      name,
-      description,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      ownerId: "1", // In a real app, this would be the current user's ID
-      assignments: [],
-    };
-    onCreateProject(newProject);
-    setIsCreateDialogOpen(false);
-    setName("");
-    setDescription("");
+    createProjectMutation.mutate({ name, description });
   };
+
+  if (isLoading) {
+    return <div>Loading projects...</div>;
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
@@ -104,7 +153,6 @@ const ProjectList = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Enter project description"
-                required
               />
             </div>
             <div className="flex justify-end gap-2">
@@ -115,7 +163,12 @@ const ProjectList = ({
               >
                 Cancel
               </Button>
-              <Button type="submit">Create Project</Button>
+              <Button 
+                type="submit"
+                disabled={createProjectMutation.isPending}
+              >
+                {createProjectMutation.isPending ? "Creating..." : "Create Project"}
+              </Button>
             </div>
           </form>
         </DialogContent>
