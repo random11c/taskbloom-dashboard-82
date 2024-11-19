@@ -10,63 +10,30 @@ import TeamManagement from "@/components/TeamManagement";
 import Sidebar from "@/components/Sidebar";
 import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAssignments } from "@/hooks/useAssignments";
+import { useTeamMembers } from "@/hooks/useTeamMembers";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const { data: assignments = [], isLoading } = useQuery({
-    queryKey: ['assignments', selectedProjectId],
-    queryFn: async () => {
-      if (!selectedProjectId) return [];
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('*')
-        .eq('project_id', selectedProjectId);
-      if (error) throw error;
-      return data as Assignment[];
-    },
-    enabled: !!selectedProjectId,
-  });
-
-  const { data: teamMembers = [] } = useQuery({
-    queryKey: ['team-members', selectedProjectId],
-    queryFn: async () => {
-      if (!selectedProjectId) return [];
-      const { data, error } = await supabase
-        .from('project_members')
-        .select(`
-          user:profiles!inner(
-            id,
-            name,
-            email,
-            avatar
-          )
-        `)
-        .eq('project_id', selectedProjectId);
-      if (error) throw error;
-      return data.map(member => member.user);
-    },
-    enabled: !!selectedProjectId,
-  });
+  const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
+  const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
 
   const handleCreateAssignment = async (assignment: Assignment) => {
     try {
       const { error } = await supabase
         .from('assignments')
-        .insert([
-          {
-            title: assignment.title,
-            description: assignment.description,
-            project_id: selectedProjectId,
-            due_date: assignment.dueDate,
-            status: assignment.status,
-            priority: assignment.priority,
-          },
-        ]);
+        .insert([{
+          title: assignment.title,
+          description: assignment.description,
+          project_id: selectedProjectId,
+          due_date: assignment.dueDate.toISOString(),
+          status: assignment.status,
+          priority: assignment.priority,
+        }]);
 
       if (error) throw error;
 

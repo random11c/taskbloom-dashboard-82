@@ -69,7 +69,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment }: Ass
                       {assignment.priority}
                     </Badge>
                     <span className="text-sm text-gray-500">
-                      Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
+                      Due: {format(assignment.dueDate, "MMM d, yyyy")}
                     </span>
                   </div>
                 </div>
