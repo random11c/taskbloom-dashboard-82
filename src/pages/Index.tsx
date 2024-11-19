@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,109 +10,11 @@ import TeamManagement from "@/components/TeamManagement";
 import Sidebar from "@/components/Sidebar";
 import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
-import { Project } from "@/types/project";
-import { TeamMember } from "@/types/user";
 
 const Index = () => {
-  const [projects, setProjects] = useState<Project[]>(() => {
-    const savedProjects = localStorage.getItem('projects');
-    return savedProjects ? JSON.parse(savedProjects) : [];
-  });
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
-  const [assignments, setAssignments] = useState<Assignment[]>(() => {
-    const savedAssignments = localStorage.getItem('assignments');
-    return savedAssignments ? JSON.parse(savedAssignments) : [];
-  });
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => {
-    const savedMembers = localStorage.getItem('teamMembers');
-    return savedMembers ? JSON.parse(savedMembers) : [];
-  });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { toast } = useToast();
-
-  useEffect(() => {
-    localStorage.setItem('projects', JSON.stringify(projects));
-  }, [projects]);
-
-  useEffect(() => {
-    localStorage.setItem('assignments', JSON.stringify(assignments));
-  }, [assignments]);
-
-  useEffect(() => {
-    localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
-  }, [teamMembers]);
-
-  const handleDeleteAssignment = (assignmentId: string) => {
-    setAssignments((prev) => prev.filter((a) => a.id !== assignmentId));
-    setProjects((prev) =>
-      prev.map((p) => ({
-        ...p,
-        assignments: p.assignments.filter((id) => id !== assignmentId),
-      }))
-    );
-    toast({
-      title: "Assignment Deleted",
-      description: "The assignment has been successfully deleted.",
-    });
-  };
-
-  const handleCreateProject = (project: Project) => {
-    setProjects((prev) => [...prev, project]);
-    setSelectedProjectId(project.id);
-    toast({
-      title: "Project Created",
-      description: "The project has been successfully created.",
-    });
-  };
-
-  const handleCreateAssignment = (assignment: Assignment) => {
-    if (selectedProjectId) {
-      setAssignments((prev) => [...prev, assignment]);
-      setProjects((prev) =>
-        prev.map((p) =>
-          p.id === selectedProjectId
-            ? { ...p, assignments: [...p.assignments, assignment.id] }
-            : p
-        )
-      );
-      setIsCreateDialogOpen(false);
-      toast({
-        title: "Assignment Created",
-        description: "The assignment has been successfully created.",
-      });
-    }
-  };
-
-  const handleStatusChange = (
-    assignmentId: string,
-    newStatus: Assignment["status"]
-  ) => {
-    setAssignments((prev) =>
-      prev.map((assignment) =>
-        assignment.id === assignmentId
-          ? { ...assignment, status: newStatus }
-          : assignment
-      )
-    );
-    toast({
-      title: "Status Updated",
-      description: "The assignment status has been updated.",
-    });
-  };
-
-  const handleAddTeamMember = (member: TeamMember) => {
-    setTeamMembers((prev) => [...prev, member]);
-  };
-
-  const currentProjectAssignments = assignments.filter((assignment) =>
-    projects
-      .find((p) => p.id === selectedProjectId)
-      ?.assignments.includes(assignment.id)
-  );
-
-  const currentProjectMembers = teamMembers.filter((member) =>
-    member.projectIds.includes(selectedProjectId || "")
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -129,8 +31,6 @@ const Index = () => {
           <div className="grid grid-cols-12 gap-6 mt-8">
             <div className="col-span-12 md:col-span-3">
               <ProjectList
-                projects={projects}
-                onCreateProject={handleCreateProject}
                 onSelectProject={setSelectedProjectId}
                 selectedProjectId={selectedProjectId}
               />
@@ -141,7 +41,7 @@ const Index = () => {
                 <>
                   <div className="flex justify-between items-center mb-8">
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {projects.find((p) => p.id === selectedProjectId)?.name}
+                      Project Details
                     </h2>
                     <Button
                       onClick={() => setIsCreateDialogOpen(true)}
@@ -151,20 +51,11 @@ const Index = () => {
                     </Button>
                   </div>
 
-                  <DashboardStats assignments={currentProjectAssignments} />
+                  <DashboardStats />
 
                   <div className="mt-8 space-y-8">
-                    <TeamManagement
-                      projectId={selectedProjectId}
-                      members={currentProjectMembers}
-                      onAddMember={handleAddTeamMember}
-                    />
-                    
-                    <AssignmentList
-                      assignments={currentProjectAssignments}
-                      onStatusChange={handleStatusChange}
-                      onDeleteAssignment={handleDeleteAssignment}
-                    />
+                    <TeamManagement projectId={selectedProjectId} />
+                    <AssignmentList />
                   </div>
                 </>
               ) : (
@@ -188,8 +79,6 @@ const Index = () => {
       <CreateAssignmentDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
-        onCreateAssignment={handleCreateAssignment}
-        teamMembers={currentProjectMembers}
       />
     </div>
   );

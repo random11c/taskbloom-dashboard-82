@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import InviteMemberDialog from "./InviteMemberDialog";
@@ -26,7 +26,6 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
       const { data, error } = await supabase
         .from('project_members')
         .select(`
-          user_id,
           role,
           profiles:user_id (
             id,
@@ -45,7 +44,7 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
         email: member.profiles.email,
         avatar: member.profiles.avatar,
         role: member.role,
-      }));
+      })) as TeamMember[];
     },
   });
 

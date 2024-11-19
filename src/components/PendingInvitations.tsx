@@ -35,7 +35,11 @@ const PendingInvitations = () => {
       const { data, error } = await supabase
         .from('project_invitations')
         .select(`
-          *,
+          id,
+          project_id,
+          inviter_id,
+          status,
+          created_at,
           projects:project_id (name),
           profiles:inviter_id (name)
         `)
@@ -43,7 +47,7 @@ const PendingInvitations = () => {
         .eq('status', 'pending');
 
       if (error) throw error;
-      setInvitations(data);
+      setInvitations(data as Invitation[]);
     } catch (error) {
       console.error('Error fetching invitations:', error);
     } finally {
