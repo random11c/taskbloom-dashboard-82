@@ -24,9 +24,10 @@ interface TeamMember {
 
 interface TeamManagementProps {
   projectId: string;
+  isAdmin: boolean;
 }
 
-const TeamManagement = ({ projectId }: TeamManagementProps) => {
+const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -73,17 +74,6 @@ const TeamManagement = ({ projectId }: TeamManagementProps) => {
         role: member.role as "admin" | "member",
         isOwner: member.user.id === projectData.owner_id
       }));
-    },
-  });
-
-  const { data: isAdmin } = useQuery({
-    queryKey: ['is-admin', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('is_project_admin', { project_id: projectId });
-
-      if (error) throw error;
-      return data;
     },
   });
 

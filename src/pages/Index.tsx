@@ -23,14 +23,17 @@ const Index = () => {
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
 
-  const { data: isAdmin } = useQuery({
+  const { data: isAdmin = false } = useQuery({
     queryKey: ['is-admin', selectedProjectId],
     queryFn: async () => {
       if (!selectedProjectId) return false;
       const { data, error } = await supabase
         .rpc('is_project_admin', { project_id: selectedProjectId });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking admin status:', error);
+        return false;
+      }
       return data;
     },
     enabled: !!selectedProjectId,
@@ -152,7 +155,10 @@ const Index = () => {
                   <DashboardStats assignments={assignments} />
 
                   <div className="mt-8 space-y-8">
-                    <TeamManagement projectId={selectedProjectId} />
+                    <TeamManagement 
+                      projectId={selectedProjectId} 
+                      isAdmin={isAdmin}
+                    />
                     <AssignmentList 
                       assignments={assignments}
                       onStatusChange={handleStatusChange}
