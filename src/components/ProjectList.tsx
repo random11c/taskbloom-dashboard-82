@@ -64,7 +64,8 @@ const ProjectList = ({
 
       console.log('Current user:', user.user);
 
-      const { data, error } = await supabase
+      // Start a transaction by using the Supabase client
+      const { data: project, error: projectError } = await supabase
         .from('projects')
         .insert([
           {
@@ -76,13 +77,29 @@ const ProjectList = ({
         .select()
         .single();
 
-      if (error) {
-        console.error('Project creation error:', error);
-        throw error;
+      if (projectError) {
+        console.error('Project creation error:', projectError);
+        throw projectError;
       }
 
-      console.log('Project created successfully:', data);
-      return data;
+      // Add the creator as an admin in project_members
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert([
+          {
+            project_id: project.id,
+            user_id: user.user.id,
+            role: 'admin'  // Set the creator as admin
+          }
+        ]);
+
+      if (memberError) {
+        console.error('Error adding project member:', memberError);
+        throw memberError;
+      }
+
+      console.log('Project created successfully:', project);
+      return project;
     },
     onSuccess: (data) => {
       console.log('Project creation mutation succeeded:', data);
