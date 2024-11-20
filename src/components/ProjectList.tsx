@@ -33,6 +33,7 @@ const ProjectList = ({
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
+      console.log('Fetching projects...');
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
 
@@ -46,6 +47,7 @@ const ProjectList = ({
         throw error;
       }
 
+      console.log('Projects fetched successfully:', data);
       return data;
     },
   });
@@ -53,8 +55,14 @@ const ProjectList = ({
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: async (newProject: { name: string; description: string | null }) => {
+      console.log('Creating new project:', newProject);
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) throw new Error('Not authenticated');
+      if (!user.user) {
+        console.error('User not authenticated');
+        throw new Error('Not authenticated');
+      }
+
+      console.log('Current user:', user.user);
 
       const { data, error } = await supabase
         .from('projects')
@@ -72,9 +80,12 @@ const ProjectList = ({
         console.error('Project creation error:', error);
         throw error;
       }
+
+      console.log('Project created successfully:', data);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Project creation mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       toast({
         title: "Project Created",
@@ -84,11 +95,11 @@ const ProjectList = ({
       setName("");
       setDescription("");
     },
-    onError: (error) => {
-      console.error('Project creation error:', error);
+    onError: (error: any) => {
+      console.error('Project creation mutation error:', error);
       toast({
         title: "Error",
-        description: "There was an error creating your project. Please try again.",
+        description: error?.message || "There was an error creating your project. Please try again.",
         variant: "destructive",
       });
     },
@@ -96,6 +107,7 @@ const ProjectList = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Submitting project creation form:', { name, description });
     createProjectMutation.mutate({ name, description });
   };
 
