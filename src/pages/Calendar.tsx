@@ -69,16 +69,20 @@ const CalendarPage = () => {
   };
 
   if (isLoading) {
-    return <div>Loading calendar...</div>;
+    return (
+      <div className="flex h-screen">
+        <Sidebar />
+        <div className="flex-1 p-8">Loading calendar...</div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex h-screen">
       <Sidebar />
-      
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Calendar</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-8">Calendar</h1>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
@@ -86,7 +90,7 @@ const CalendarPage = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
-                className="rounded-md border shadow"
+                className="rounded-md border shadow bg-white"
               />
             </div>
 

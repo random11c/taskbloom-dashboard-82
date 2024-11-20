@@ -33,6 +33,9 @@ const ProjectList = ({
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -50,19 +53,25 @@ const ProjectList = ({
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: async (newProject: { name: string; description: string | null }) => {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('projects')
         .insert([
           {
             name: newProject.name,
             description: newProject.description,
-            owner_id: (await supabase.auth.getUser()).data.user?.id,
+            owner_id: user.user.id,
           },
         ])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Project creation error:', error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {
