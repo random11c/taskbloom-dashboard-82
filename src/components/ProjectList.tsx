@@ -1,18 +1,11 @@
 import { useState } from "react";
 import { Plus, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import CreateProjectDialog from "./CreateProjectDialog";
+import { createProject } from "@/utils/projectMutations";
 
 interface ProjectListProps {
   onSelectProject: (projectId: string) => void;
@@ -24,8 +17,6 @@ const ProjectList = ({
   selectedProjectId,
 }: ProjectListProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -54,53 +45,7 @@ const ProjectList = ({
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: async (newProject: { name: string; description: string | null }) => {
-      console.log('Creating new project:', newProject);
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        console.error('User not authenticated');
-        throw new Error('Not authenticated');
-      }
-
-      console.log('Current user:', user.user);
-
-      // Start a transaction by using the Supabase client
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert([
-          {
-            name: newProject.name,
-            description: newProject.description,
-            owner_id: user.user.id,
-          },
-        ])
-        .select()
-        .single();
-
-      if (projectError) {
-        console.error('Project creation error:', projectError);
-        throw projectError;
-      }
-
-      // Add the creator as an admin in project_members
-      const { error: memberError } = await supabase
-        .from('project_members')
-        .insert([
-          {
-            project_id: project.id,
-            user_id: user.user.id,
-            role: 'admin'  // Set the creator as admin
-          }
-        ]);
-
-      if (memberError) {
-        console.error('Error adding project member:', memberError);
-        throw memberError;
-      }
-
-      console.log('Project created successfully:', project);
-      return project;
-    },
+    mutationFn: createProject,
     onSuccess: (data) => {
       console.log('Project creation mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -109,8 +54,6 @@ const ProjectList = ({
         description: "Your new project has been created successfully.",
       });
       setIsCreateDialogOpen(false);
-      setName("");
-      setDescription("");
     },
     onError: (error: any) => {
       console.error('Project creation mutation error:', error);
@@ -122,10 +65,8 @@ const ProjectList = ({
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Submitting project creation form:', { name, description });
-    createProjectMutation.mutate({ name, description });
+  const handleCreateProject = (name: string, description: string) => {
+    createProjectMutation.mutate(name, description);
   };
 
   if (isLoading) {
@@ -167,49 +108,12 @@ const ProjectList = ({
         ))}
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Project Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter project name"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter project description"
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                type="submit"
-                disabled={createProjectMutation.isPending}
-              >
-                {createProjectMutation.isPending ? "Creating..." : "Create Project"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CreateProjectDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSubmit={handleCreateProject}
+        isLoading={createProjectMutation.isPending}
+      />
     </div>
   );
 };
