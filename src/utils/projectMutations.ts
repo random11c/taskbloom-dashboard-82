@@ -1,7 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const createProject = async (name: string, description: string | null) => {
-  console.log('Creating new project:', { name, description });
+interface ProjectData {
+  name: string;
+  description: string | null;
+}
+
+export const createProject = async (data: ProjectData) => {
+  console.log('Creating new project:', data);
   
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -28,8 +33,8 @@ export const createProject = async (name: string, description: string | null) =>
     .from('projects')
     .insert([
       {
-        name,
-        description,
+        name: data.name,
+        description: data.description,
         owner_id: user.id,
       },
     ])
@@ -48,7 +53,7 @@ export const createProject = async (name: string, description: string | null) =>
       {
         project_id: project.id,
         user_id: user.id,
-        role: 'admin'  // Set the creator as admin
+        role: 'admin'
       }
     ]);
 

@@ -45,7 +45,8 @@ const ProjectList = ({
 
   // Create project mutation
   const createProjectMutation = useMutation({
-    mutationFn: createProject,
+    mutationFn: (variables: { name: string; description: string }) => 
+      createProject(variables),
     onSuccess: (data) => {
       console.log('Project creation mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
@@ -66,7 +67,7 @@ const ProjectList = ({
   });
 
   const handleCreateProject = (name: string, description: string) => {
-    createProjectMutation.mutate(name, description);
+    createProjectMutation.mutate({ name, description });
   };
 
   if (isLoading) {
