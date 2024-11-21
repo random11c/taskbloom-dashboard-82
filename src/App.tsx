@@ -21,29 +21,50 @@ const App = () => {
 
   useEffect(() => {
     // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session);
-      setSession(session);
-      setIsLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          throw error;
+        }
+        console.log('Initial session:', session);
+        setSession(session);
+      } catch (error: any) {
+        console.error('Error checking session:', error);
+        toast({
+          title: "Authentication Error",
+          description: "Please try logging in again.",
+          variant: "destructive",
+        });
+        // Clear any invalid session state
+        await supabase.auth.signOut();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session);
-      setSession(session);
+      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        setSession(session);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   return (
-    <SessionContextProvider supabaseClient={supabase}>
+    <SessionContextProvider supabaseClient={supabase} initialSession={session}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
