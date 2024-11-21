@@ -23,22 +23,25 @@ const App = () => {
     // Initial session check
     const checkSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        console.log('Initial session check:', { currentSession, error });
+        
         if (error) {
           console.error('Session check error:', error);
           throw error;
         }
-        console.log('Initial session:', session);
-        setSession(session);
+
+        setSession(currentSession);
       } catch (error: any) {
         console.error('Error checking session:', error);
+        // Clear any invalid session state
+        setSession(null);
+        await supabase.auth.signOut();
         toast({
-          title: "Authentication Error",
-          description: "Please try logging in again.",
+          title: "Session Error",
+          description: "Please sign in again.",
           variant: "destructive",
         });
-        // Clear any invalid session state
-        await supabase.auth.signOut();
       } finally {
         setIsLoading(false);
       }
@@ -49,15 +52,21 @@ const App = () => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session);
-      if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
-        setSession(session);
+    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      console.log('Auth state changed:', { event: _event, session: currentSession });
+      setSession(currentSession);
+      
+      if (!currentSession) {
+        // Clear query cache when user logs out
+        queryClient.clear();
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [toast]);
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
+  }, [toast, queryClient]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
