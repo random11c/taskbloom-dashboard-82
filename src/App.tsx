@@ -12,7 +12,14 @@ import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { useToast } from "./components/ui/use-toast";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -20,6 +27,8 @@ const App = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth listeners...');
+    
     // Initial session check
     const checkSession = async () => {
       try {
@@ -31,7 +40,26 @@ const App = () => {
           throw error;
         }
 
-        setSession(currentSession);
+        if (currentSession?.expires_at) {
+          const expiresAt = new Date(currentSession.expires_at * 1000);
+          const now = new Date();
+          
+          if (expiresAt <= now) {
+            console.log('Session expired, refreshing...');
+            const { data: { session: refreshedSession }, error: refreshError } = 
+              await supabase.auth.refreshSession();
+            
+            if (refreshError) {
+              throw refreshError;
+            }
+            
+            setSession(refreshedSession);
+          } else {
+            setSession(currentSession);
+          }
+        } else {
+          setSession(currentSession);
+        }
       } catch (error: any) {
         console.error('Error checking session:', error);
         // Clear any invalid session state
@@ -54,7 +82,30 @@ const App = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       console.log('Auth state changed:', { event: _event, session: currentSession });
-      setSession(currentSession);
+      
+      if (currentSession?.expires_at) {
+        const expiresAt = new Date(currentSession.expires_at * 1000);
+        const now = new Date();
+        
+        if (expiresAt <= now) {
+          console.log('Session expired during state change, refreshing...');
+          const { data: { session: refreshedSession }, error: refreshError } = 
+            await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('Error refreshing session:', refreshError);
+            setSession(null);
+            queryClient.clear();
+            return;
+          }
+          
+          setSession(refreshedSession);
+        } else {
+          setSession(currentSession);
+        }
+      } else {
+        setSession(currentSession);
+      }
       
       if (!currentSession) {
         // Clear query cache when user logs out
