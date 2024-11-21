@@ -23,17 +23,20 @@ const Index = () => {
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
 
+  // Check if user is admin for the selected project
   const { data: isAdmin = false } = useQuery({
     queryKey: ['is-admin', selectedProjectId],
     queryFn: async () => {
       if (!selectedProjectId) return false;
+      console.log('Checking admin status for project:', selectedProjectId);
       const { data, error } = await supabase
-        .rpc('is_project_admin', { project_id: selectedProjectId });
+        .rpc('is_project_admin', { p_project_id: selectedProjectId });
 
       if (error) {
         console.error('Error checking admin status:', error);
         return false;
       }
+      console.log('Admin status:', data);
       return data;
     },
     enabled: !!selectedProjectId,
@@ -41,6 +44,7 @@ const Index = () => {
 
   const handleCreateAssignment = async (assignment: Assignment) => {
     try {
+      console.log('Creating new assignment:', assignment);
       const { error } = await supabase
         .from('assignments')
         .insert([{
@@ -71,6 +75,7 @@ const Index = () => {
 
   const handleStatusChange = async (assignmentId: string, newStatus: Assignment['status']) => {
     try {
+      console.log('Updating assignment status:', { assignmentId, newStatus });
       const { error } = await supabase
         .from('assignments')
         .update({ status: newStatus })
@@ -94,6 +99,7 @@ const Index = () => {
 
   const handleDeleteAssignment = async (assignmentId: string) => {
     try {
+      console.log('Deleting assignment:', assignmentId);
       const { error } = await supabase
         .from('assignments')
         .delete()
@@ -155,14 +161,18 @@ const Index = () => {
                   <DashboardStats assignments={assignments} />
 
                   <div className="mt-8 space-y-8">
-                    <TeamManagement 
-                      projectId={selectedProjectId} 
-                      isAdmin={isAdmin}
-                    />
+                    {/* Only show team management to admins */}
+                    {isAdmin && (
+                      <TeamManagement 
+                        projectId={selectedProjectId} 
+                        isAdmin={isAdmin}
+                      />
+                    )}
                     <AssignmentList 
                       assignments={assignments}
                       onStatusChange={handleStatusChange}
                       onDeleteAssignment={handleDeleteAssignment}
+                      isAdmin={isAdmin}
                     />
                   </div>
                 </>

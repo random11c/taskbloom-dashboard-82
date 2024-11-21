@@ -15,9 +15,10 @@ interface AssignmentListProps {
   assignments: Assignment[];
   onStatusChange: (assignmentId: string, newStatus: Assignment["status"]) => void;
   onDeleteAssignment: (assignmentId: string) => void;
+  isAdmin: boolean;
 }
 
-const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment }: AssignmentListProps) => {
+const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, isAdmin }: AssignmentListProps) => {
   const getPriorityColor = (priority: Assignment["priority"]) => {
     switch (priority) {
       case "high":
@@ -47,8 +48,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment }: Ass
         <div className="space-y-4">
           {assignments.length === 0 ? (
             <p className="text-gray-500 text-center py-8">
-              No assignments created yet. Create your first assignment to get
-              started!
+              No assignments created yet. {isAdmin && "Create your first assignment to get started!"}
             </p>
           ) : (
             assignments.map((assignment) => (
@@ -87,38 +87,50 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment }: Ass
                     ))}
                   </div>
 
-                  <Select
-                    value={assignment.status}
-                    onValueChange={(value: Assignment["status"]) =>
-                      onStatusChange(assignment.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue>
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
-                            assignment.status
-                          )}`}
-                        >
-                          {assignment.status}
-                        </span>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  {isAdmin ? (
+                    <>
+                      <Select
+                        value={assignment.status}
+                        onValueChange={(value: Assignment["status"]) =>
+                          onStatusChange(assignment.id, value)
+                        }
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue>
+                            <span
+                              className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
+                                assignment.status
+                              )}`}
+                            >
+                              {assignment.status}
+                            </span>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="in-progress">In Progress</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => onDeleteAssignment(assignment.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => onDeleteAssignment(assignment.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  ) : (
+                    <span
+                      className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
+                        assignment.status
+                      )}`}
+                    >
+                      {assignment.status}
+                    </span>
+                  )}
                 </div>
               </div>
             ))

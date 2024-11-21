@@ -266,7 +266,7 @@ export type Database = {
     Functions: {
       is_project_admin: {
         Args: {
-          project_id: string
+          p_project_id: string
         }
         Returns: boolean
       }
