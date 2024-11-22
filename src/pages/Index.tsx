@@ -5,6 +5,7 @@ import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
 import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import Sidebar from "@/components/Sidebar";
+import TeamManagement from "@/components/TeamManagement";
 import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
@@ -121,6 +122,13 @@ const Index = () => {
                       assignments={assignments}
                       onStatusChange={handleStatusChange}
                       onDeleteAssignment={handleDeleteAssignment}
+                      isAdmin={isAdmin}
+                    />
+                  </div>
+
+                  <div className="mt-8">
+                    <TeamManagement
+                      projectId={selectedProjectId}
                       isAdmin={isAdmin}
                     />
                   </div>
