@@ -35,30 +35,10 @@ const App = () => {
           throw error;
         }
 
-        if (currentSession?.expires_at) {
-          const expiresAt = new Date(currentSession.expires_at * 1000);
-          const now = new Date();
-          
-          if (expiresAt <= now) {
-            console.log('Session expired, refreshing...');
-            const { data: { session: refreshedSession }, error: refreshError } = 
-              await supabase.auth.refreshSession();
-            
-            if (refreshError) {
-              throw refreshError;
-            }
-            
-            setSession(refreshedSession);
-          } else {
-            setSession(currentSession);
-          }
-        } else {
-          setSession(currentSession);
-        }
+        setSession(currentSession);
       } catch (error: any) {
         console.error('Error checking session:', error);
         setSession(null);
-        await supabase.auth.signOut();
       } finally {
         setIsLoading(false);
       }
@@ -71,30 +51,7 @@ const App = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       console.log('Auth state changed:', { event: _event, session: currentSession });
-      
-      if (currentSession?.expires_at) {
-        const expiresAt = new Date(currentSession.expires_at * 1000);
-        const now = new Date();
-        
-        if (expiresAt <= now) {
-          console.log('Session expired during state change, refreshing...');
-          const { data: { session: refreshedSession }, error: refreshError } = 
-            await supabase.auth.refreshSession();
-          
-          if (refreshError) {
-            console.error('Error refreshing session:', refreshError);
-            setSession(null);
-            queryClient.clear();
-            return;
-          }
-          
-          setSession(refreshedSession);
-        } else {
-          setSession(currentSession);
-        }
-      } else {
-        setSession(currentSession);
-      }
+      setSession(currentSession);
       
       if (!currentSession) {
         queryClient.clear();
