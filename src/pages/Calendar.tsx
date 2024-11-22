@@ -2,21 +2,18 @@ import { useEffect, useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
+import { Assignment } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
-import { useQueryClient } from "@tanstack/react-query";
 
 const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchAssignments();
     
-    // Set up realtime subscription
     const channel = supabase
       .channel('assignments_changes')
       .on(
@@ -27,6 +24,7 @@ const CalendarPage = () => {
           table: 'assignments'
         },
         () => {
+          console.log('Assignment changes detected, refreshing...');
           fetchAssignments();
         }
       )
@@ -66,8 +64,8 @@ const CalendarPage = () => {
         title: assignment.title,
         description: assignment.description || "",
         dueDate: new Date(assignment.due_date),
-        status: assignment.status as AssignmentStatus,
-        priority: assignment.priority as AssignmentPriority,
+        status: assignment.status,
+        priority: assignment.priority,
         assignees: assignment.assignment_assignees?.map((aa: any) => ({
           id: aa.user.id,
           name: aa.user.name,
@@ -90,7 +88,7 @@ const CalendarPage = () => {
     );
   };
 
-  const getStatusColor = (status: AssignmentStatus) => {
+  const getStatusColor = (status: Assignment["status"]) => {
     switch (status) {
       case "completed":
         return "bg-green-100 text-green-800";

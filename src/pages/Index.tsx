@@ -1,29 +1,24 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import AssignmentList from "@/components/AssignmentList";
 import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
 import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
-import TeamManagement from "@/components/TeamManagement";
 import Sidebar from "@/components/Sidebar";
-import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useQuery } from "@tanstack/react-query";
+import ProjectActions from "@/components/ProjectActions";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
 
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
 
-  // Check if user is admin for the selected project
   const { data: isAdmin = false } = useQuery({
     queryKey: ['is-admin', selectedProjectId],
     queryFn: async () => {
@@ -57,19 +52,9 @@ const Index = () => {
         }]);
 
       if (error) throw error;
-
-      toast({
-        title: "Assignment Created",
-        description: "Your new assignment has been created successfully.",
-      });
       setIsCreateDialogOpen(false);
     } catch (error) {
       console.error('Error creating assignment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create assignment. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -82,18 +67,8 @@ const Index = () => {
         .eq('id', assignmentId);
 
       if (error) throw error;
-
-      toast({
-        title: "Status Updated",
-        description: "Assignment status has been updated successfully.",
-      });
     } catch (error) {
       console.error('Error updating status:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update status. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -106,18 +81,8 @@ const Index = () => {
         .eq('id', assignmentId);
 
       if (error) throw error;
-
-      toast({
-        title: "Assignment Deleted",
-        description: "The assignment has been deleted successfully.",
-      });
     } catch (error) {
       console.error('Error deleting assignment:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete assignment. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -131,8 +96,6 @@ const Index = () => {
             Project Dashboard
           </h1>
 
-          <PendingInvitations />
-
           <div className="grid grid-cols-12 gap-6 mt-8">
             <div className="col-span-12 md:col-span-3">
               <ProjectList
@@ -144,30 +107,16 @@ const Index = () => {
             <div className="col-span-12 md:col-span-9">
               {selectedProjectId ? (
                 <>
-                  <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Project Details
-                    </h2>
-                    {isAdmin && (
-                      <Button
-                        onClick={() => setIsCreateDialogOpen(true)}
-                        className="bg-primary hover:bg-primary/90"
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Create Assignment
-                      </Button>
-                    )}
-                  </div>
+                  <ProjectActions
+                    projectId={selectedProjectId}
+                    isAdmin={isAdmin}
+                    onCreateClick={() => setIsCreateDialogOpen(true)}
+                    onProjectDeleted={() => setSelectedProjectId(undefined)}
+                  />
 
                   <DashboardStats assignments={assignments} />
 
-                  <div className="mt-8 space-y-8">
-                    {/* Only show team management to admins */}
-                    {isAdmin && (
-                      <TeamManagement 
-                        projectId={selectedProjectId} 
-                        isAdmin={isAdmin}
-                      />
-                    )}
+                  <div className="mt-8">
                     <AssignmentList 
                       assignments={assignments}
                       onStatusChange={handleStatusChange}

@@ -1,11 +1,9 @@
-import { Calendar, LayoutDashboard, Settings, LogOut } from "lucide-react";
+import { Calendar, LayoutDashboard, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
@@ -37,13 +35,6 @@ const Sidebar = () => {
         >
           <Calendar className="h-5 w-5" />
           <span>Calendar</span>
-        </Link>
-        <Link
-          to="#"
-          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Settings className="h-5 w-5" />
-          <span>Settings</span>
         </Link>
       </nav>
 
