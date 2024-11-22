@@ -5,14 +5,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
+import { useQueryClient } from "@tanstack/react-query";
 
 const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     fetchAssignments();
+    
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('assignments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignments'
+        },
+        () => {
+          fetchAssignments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchAssignments = async () => {
@@ -68,6 +90,17 @@ const CalendarPage = () => {
     );
   };
 
+  const getStatusColor = (status: AssignmentStatus) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in-progress":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen">
@@ -107,13 +140,18 @@ const CalendarPage = () => {
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium">{assignment.title}</h3>
-                      <span className={`px-2 py-1 rounded-full text-sm ${
-                        assignment.priority === 'high' ? 'bg-red-100 text-red-700' :
-                        assignment.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
-                        {assignment.priority}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-sm ${
+                          assignment.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          assignment.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {assignment.priority}
+                        </span>
+                        <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(assignment.status)}`}>
+                          {assignment.status}
+                        </span>
+                      </div>
                     </div>
                     
                     <p className="text-sm text-gray-500 mt-1">

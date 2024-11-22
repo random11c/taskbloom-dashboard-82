@@ -1,4 +1,4 @@
-import { Calendar, LayoutDashboard, Settings, Users, LogOut } from "lucide-react";
+import { Calendar, LayoutDashboard, Settings, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -11,17 +11,8 @@ const Sidebar = () => {
     try {
       await supabase.auth.signOut();
       navigate('/login');
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
-      });
     } catch (error) {
       console.error('Logout error:', error);
-      toast({
-        title: "Error",
-        description: "There was a problem logging out. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -46,13 +37,6 @@ const Sidebar = () => {
         >
           <Calendar className="h-5 w-5" />
           <span>Calendar</span>
-        </Link>
-        <Link
-          to="#"
-          className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Users className="h-5 w-5" />
-          <span>Team</span>
         </Link>
         <Link
           to="#"

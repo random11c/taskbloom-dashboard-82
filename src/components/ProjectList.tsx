@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Plus, Folder } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Folder, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import CreateProjectDialog from "./CreateProjectDialog";
@@ -17,7 +16,6 @@ const ProjectList = ({
   selectedProjectId,
 }: ProjectListProps) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch projects
@@ -43,6 +41,24 @@ const ProjectList = ({
     },
   });
 
+  // Delete project mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: string) => {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      if (selectedProjectId) {
+        onSelectProject('');
+      }
+    },
+  });
+
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: (variables: { name: string; description: string }) => 
@@ -50,24 +66,38 @@ const ProjectList = ({
     onSuccess: (data) => {
       console.log('Project creation mutation succeeded:', data);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
-      toast({
-        title: "Project Created",
-        description: "Your new project has been created successfully.",
-      });
       setIsCreateDialogOpen(false);
-    },
-    onError: (error: any) => {
-      console.error('Project creation mutation error:', error);
-      toast({
-        title: "Error",
-        description: error?.message || "There was an error creating your project. Please try again.",
-        variant: "destructive",
-      });
     },
   });
 
+  // Set up realtime subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   const handleCreateProject = (name: string, description: string) => {
     createProjectMutation.mutate({ name, description });
+  };
+
+  const handleDeleteProject = (projectId: string) => {
+    deleteProjectMutation.mutate(projectId);
   };
 
   if (isLoading) {
@@ -89,23 +119,38 @@ const ProjectList = ({
 
       <div className="space-y-2">
         {projects.map((project) => (
-          <button
+          <div
             key={project.id}
-            onClick={() => onSelectProject(project.id)}
-            className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+            className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors ${
               selectedProjectId === project.id
                 ? "bg-primary/10 text-primary"
                 : "hover:bg-gray-50 text-gray-700"
             }`}
           >
-            <Folder className="h-5 w-5 mr-2" />
-            <div className="text-left">
-              <div className="font-medium">{project.name}</div>
-              <div className="text-sm text-gray-500 truncate">
-                {project.description}
+            <button
+              onClick={() => onSelectProject(project.id)}
+              className="flex items-center flex-1"
+            >
+              <Folder className="h-5 w-5 mr-2" />
+              <div className="text-left">
+                <div className="font-medium">{project.name}</div>
+                <div className="text-sm text-gray-500 truncate">
+                  {project.description}
+                </div>
               </div>
-            </div>
-          </button>
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteProject(project.id);
+              }}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         ))}
       </div>
 
