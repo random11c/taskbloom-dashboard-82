@@ -6,6 +6,7 @@ import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import Sidebar from "@/components/Sidebar";
 import TeamManagement from "@/components/TeamManagement";
+import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
@@ -93,6 +94,8 @@ const Index = () => {
       
       <div className="flex-1 p-8">
         <div className="max-w-7xl mx-auto">
+          <PendingInvitations />
+          
           <h1 className="text-3xl font-bold text-gray-900 mb-8">
             Project Dashboard
           </h1>
