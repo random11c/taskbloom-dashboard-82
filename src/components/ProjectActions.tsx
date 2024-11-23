@@ -45,6 +45,14 @@ const ProjectActions = ({ projectId, isAdmin, onCreateClick, onProjectDeleted }:
           </Button>
         </div>
       )}
+      {!isAdmin && (
+        <Button
+          onClick={onCreateClick}
+          className="bg-primary hover:bg-primary/90"
+        >
+          <Plus className="mr-2 h-4 w-4" /> Create Assignment
+        </Button>
+      )}
     </div>
   );
 };

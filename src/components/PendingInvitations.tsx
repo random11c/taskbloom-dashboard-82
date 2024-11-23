@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Check, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Invitation {
   id: string;
@@ -22,11 +23,36 @@ const PendingInvitations = () => {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    console.log('Fetching invitations...');
+    console.log('Setting up invitations...');
     fetchInvitations();
-  }, []);
+
+    // Set up realtime subscription
+    const channel = supabase
+      .channel('invitations_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_invitations'
+        },
+        (payload) => {
+          console.log('Invitation change detected:', payload);
+          fetchInvitations();
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+          queryClient.invalidateQueries({ queryKey: ['team-members'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up invitations subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const fetchInvitations = async () => {
     try {

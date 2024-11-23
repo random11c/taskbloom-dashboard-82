@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import AssignmentList from "@/components/AssignmentList";
 import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
@@ -11,12 +11,13 @@ import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ProjectActions from "@/components/ProjectActions";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
@@ -38,6 +39,34 @@ const Index = () => {
     },
     enabled: !!selectedProjectId,
   });
+
+  // Set up realtime subscription for assignments
+  useEffect(() => {
+    if (!selectedProjectId) return;
+
+    console.log('Setting up realtime subscription for assignments...');
+    const channel = supabase
+      .channel('assignments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignments',
+          filter: `project_id=eq.${selectedProjectId}`
+        },
+        (payload) => {
+          console.log('Assignment change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['assignments', selectedProjectId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up assignments subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [selectedProjectId, queryClient]);
 
   const handleCreateAssignment = async (assignment: Assignment) => {
     try {

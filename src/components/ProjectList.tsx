@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Folder, Trash2 } from "lucide-react";
+import { Plus, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,24 +41,6 @@ const ProjectList = ({
     },
   });
 
-  // Delete project mutation
-  const deleteProjectMutation = useMutation({
-    mutationFn: async (projectId: string) => {
-      const { error } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', projectId);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['projects'] });
-      if (selectedProjectId) {
-        onSelectProject('');
-      }
-    },
-  });
-
   // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: (variables: { name: string; description: string }) => 
@@ -72,6 +54,7 @@ const ProjectList = ({
 
   // Set up realtime subscription
   useEffect(() => {
+    console.log('Setting up realtime subscription for projects...');
     const channel = supabase
       .channel('projects_changes')
       .on(
@@ -81,23 +64,21 @@ const ProjectList = ({
           schema: 'public',
           table: 'projects'
         },
-        () => {
+        (payload) => {
+          console.log('Project change detected:', payload);
           queryClient.invalidateQueries({ queryKey: ['projects'] });
         }
       )
       .subscribe();
 
     return () => {
+      console.log('Cleaning up projects subscription');
       supabase.removeChannel(channel);
     };
   }, [queryClient]);
 
   const handleCreateProject = (name: string, description: string) => {
     createProjectMutation.mutate({ name, description });
-  };
-
-  const handleDeleteProject = (projectId: string) => {
-    deleteProjectMutation.mutate(projectId);
   };
 
   if (isLoading) {
@@ -139,17 +120,6 @@ const ProjectList = ({
                 </div>
               </div>
             </button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDeleteProject(project.id);
-              }}
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
           </div>
         ))}
       </div>
