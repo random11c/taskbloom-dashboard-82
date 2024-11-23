@@ -18,6 +18,7 @@ const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: assignments = [], isLoading: isLoadingAssignments } = useAssignments(selectedProjectId);
   const { data: teamMembers = [] } = useTeamMembers(selectedProjectId);
@@ -39,6 +40,31 @@ const Index = () => {
     },
     enabled: !!selectedProjectId,
   });
+
+  // Set up realtime subscription for projects
+  useEffect(() => {
+    console.log('Setting up realtime subscription for projects...');
+    const channel = supabase
+      .channel('projects_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'projects'
+        },
+        (payload) => {
+          console.log('Project change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['projects'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up projects subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Set up realtime subscription for assignments
   useEffect(() => {
@@ -84,8 +110,17 @@ const Index = () => {
 
       if (error) throw error;
       setIsCreateDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Assignment created successfully",
+      });
     } catch (error) {
       console.error('Error creating assignment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create assignment",
+        variant: "destructive",
+      });
     }
   };
 
@@ -121,15 +156,15 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       
-      <div className="flex-1 p-8">
-        <div className="max-w-7xl mx-auto">
+      <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
           <PendingInvitations />
           
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Project Dashboard
           </h1>
 
-          <div className="grid grid-cols-12 gap-6 mt-8">
+          <div className="grid grid-cols-12 gap-4 md:gap-6">
             <div className="col-span-12 md:col-span-3">
               <ProjectList
                 onSelectProject={setSelectedProjectId}
@@ -137,9 +172,9 @@ const Index = () => {
               />
             </div>
 
-            <div className="col-span-12 md:col-span-9">
+            <div className="col-span-12 md:col-span-9 space-y-6">
               {selectedProjectId ? (
-                <>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-6">
                   <ProjectActions
                     projectId={selectedProjectId}
                     isAdmin={isAdmin}
@@ -164,11 +199,11 @@ const Index = () => {
                       isAdmin={isAdmin}
                     />
                   </div>
-                </>
+                </div>
               ) : (
-                <div className="flex items-center justify-center h-full min-h-[400px] bg-white rounded-lg border border-gray-100">
-                  <div className="text-center">
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <div className="flex items-center justify-center h-full min-h-[400px] bg-white rounded-lg border border-gray-100 p-8">
+                  <div className="text-center max-w-md">
+                    <h3 className="text-xl font-medium text-gray-900 mb-2">
                       No Project Selected
                     </h3>
                     <p className="text-gray-500">

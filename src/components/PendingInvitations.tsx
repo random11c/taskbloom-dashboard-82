@@ -141,7 +141,7 @@ const PendingInvitations = () => {
   };
 
   if (isLoading) {
-    return <div>Loading invitations...</div>;
+    return <div className="animate-pulse bg-gray-100 h-20 rounded-lg"></div>;
   }
 
   if (invitations.length === 0) {
@@ -149,26 +149,26 @@ const PendingInvitations = () => {
   }
 
   return (
-    <div className="space-y-4 mb-8">
-      <h3 className="text-lg font-semibold">Pending Invitations</h3>
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <h3 className="text-lg font-semibold text-gray-900">Pending Invitations</h3>
+      <div className="grid gap-4 md:grid-cols-2">
         {invitations.map((invitation) => (
           <div
             key={invitation.id}
-            className="flex items-center justify-between p-4 border rounded-lg bg-white"
+            className="flex flex-col p-4 border rounded-lg bg-white shadow-sm transition-shadow hover:shadow-md"
           >
-            <div>
-              <p className="font-medium">
+            <div className="flex-1">
+              <p className="font-medium text-gray-900">
                 {invitation.inviter?.name || 'Someone'} invited you to join {invitation.project?.name || 'a project'}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 mt-1">
                 Sent {new Date(invitation.created_at).toLocaleDateString()}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-4">
               <Button
                 size="sm"
-                className="bg-green-500 hover:bg-green-600"
+                className="flex-1 bg-green-500 hover:bg-green-600"
                 onClick={() => handleInvitation(invitation.id, true)}
               >
                 <Check className="h-4 w-4 mr-1" />
@@ -177,7 +177,7 @@ const PendingInvitations = () => {
               <Button
                 size="sm"
                 variant="outline"
-                className="border-red-500 text-red-500 hover:bg-red-50"
+                className="flex-1 border-red-500 text-red-500 hover:bg-red-50"
                 onClick={() => handleInvitation(invitation.id, false)}
               >
                 <X className="h-4 w-4 mr-1" />
