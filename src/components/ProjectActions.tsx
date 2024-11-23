@@ -47,24 +47,26 @@ const ProjectActions = ({ projectId, isAdmin, onCreateClick, onProjectDeleted }:
       <h2 className="text-xl font-semibold text-gray-900">
         Project Details
       </h2>
-      <div className="flex flex-wrap gap-3">
-        {isAdmin && (
-          <>
-            <Button
-              onClick={onCreateClick}
-              className="bg-primary hover:bg-primary/90"
-            >
-              <Plus className="mr-2 h-4 w-4" /> Create Assignment
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteProject}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete Project
-            </Button>
-          </>
-        )}
-      </div>
+      {isAdmin && (
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={onCreateClick}
+            className="bg-primary hover:bg-primary/90"
+            size="sm"
+          >
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Create Assignment</span>
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleDeleteProject}
+            size="sm"
+          >
+            <Trash2 className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Delete Project</span>
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

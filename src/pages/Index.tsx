@@ -5,6 +5,7 @@ import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
 import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import Sidebar from "@/components/Sidebar";
+import MobileNav from "@/components/MobileNav";
 import TeamManagement from "@/components/TeamManagement";
 import PendingInvitations from "@/components/PendingInvitations";
 import { Assignment } from "@/types/assignment";
@@ -156,63 +157,68 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       
-      <div className="flex-1 p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <PendingInvitations />
-          
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Project Dashboard
-          </h1>
+      <div className="flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-2 md:hidden">
+          <MobileNav />
+        </div>
+        
+        <div className="p-4 md:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <PendingInvitations />
+            
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Project Dashboard
+            </h1>
 
-          <div className="grid grid-cols-12 gap-4 md:gap-6">
-            <div className="col-span-12 md:col-span-3">
-              <ProjectList
-                onSelectProject={setSelectedProjectId}
-                selectedProjectId={selectedProjectId}
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+              <div className="md:col-span-3">
+                <ProjectList
+                  onSelectProject={setSelectedProjectId}
+                  selectedProjectId={selectedProjectId}
+                />
+              </div>
 
-            <div className="col-span-12 md:col-span-9 space-y-6">
-              {selectedProjectId ? (
-                <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 space-y-6">
-                  <ProjectActions
-                    projectId={selectedProjectId}
-                    isAdmin={isAdmin}
-                    onCreateClick={() => setIsCreateDialogOpen(true)}
-                    onProjectDeleted={() => setSelectedProjectId(undefined)}
-                  />
-
-                  <DashboardStats assignments={assignments} />
-
-                  <div className="mt-8">
-                    <AssignmentList 
-                      assignments={assignments}
-                      onStatusChange={handleStatusChange}
-                      onDeleteAssignment={handleDeleteAssignment}
-                      isAdmin={isAdmin}
-                    />
-                  </div>
-
-                  <div className="mt-8">
-                    <TeamManagement
+              <div className="md:col-span-9 space-y-6">
+                {selectedProjectId ? (
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 md:p-6 space-y-6">
+                    <ProjectActions
                       projectId={selectedProjectId}
                       isAdmin={isAdmin}
+                      onCreateClick={() => setIsCreateDialogOpen(true)}
+                      onProjectDeleted={() => setSelectedProjectId(undefined)}
                     />
+
+                    <DashboardStats assignments={assignments} />
+
+                    <div className="mt-8">
+                      <AssignmentList 
+                        assignments={assignments}
+                        onStatusChange={handleStatusChange}
+                        onDeleteAssignment={handleDeleteAssignment}
+                        isAdmin={isAdmin}
+                      />
+                    </div>
+
+                    <div className="mt-8">
+                      <TeamManagement
+                        projectId={selectedProjectId}
+                        isAdmin={isAdmin}
+                      />
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full min-h-[400px] bg-white rounded-lg border border-gray-100 p-8">
-                  <div className="text-center max-w-md">
-                    <h3 className="text-xl font-medium text-gray-900 mb-2">
-                      No Project Selected
-                    </h3>
-                    <p className="text-gray-500">
-                      Select a project from the sidebar or create a new one to get
-                      started.
-                    </p>
+                ) : (
+                  <div className="flex items-center justify-center h-full min-h-[400px] bg-white rounded-lg border border-gray-100 p-8">
+                    <div className="text-center max-w-md">
+                      <h3 className="text-xl font-medium text-gray-900 mb-2">
+                        No Project Selected
+                      </h3>
+                      <p className="text-gray-500">
+                        Select a project from the sidebar or create a new one to get started.
+                      </p>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>
