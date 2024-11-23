@@ -12,10 +12,10 @@ interface Invitation {
   created_at: string;
   project: {
     name: string;
-  };
+  } | null;
   inviter: {
     name: string;
-  };
+  } | null;
 }
 
 const PendingInvitations = () => {
@@ -101,8 +101,8 @@ const PendingInvitations = () => {
       toast({
         title: accept ? "Invitation Accepted" : "Invitation Declined",
         description: accept 
-          ? `You have joined ${invitation.project.name}`
-          : `You have declined the invitation to join ${invitation.project.name}`,
+          ? `You have joined ${invitation.project?.name || 'the project'}`
+          : `You have declined the invitation to join ${invitation.project?.name || 'the project'}`,
       });
     } catch (error) {
       console.error('Error handling invitation:', error);
@@ -133,7 +133,7 @@ const PendingInvitations = () => {
           >
             <div>
               <p className="font-medium">
-                {invitation.inviter.name} invited you to join {invitation.project.name}
+                {invitation.inviter?.name || 'Someone'} invited you to join {invitation.project?.name || 'a project'}
               </p>
               <p className="text-sm text-gray-500">
                 Sent {new Date(invitation.created_at).toLocaleDateString()}
