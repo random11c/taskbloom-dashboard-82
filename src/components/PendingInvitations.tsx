@@ -24,14 +24,19 @@ const PendingInvitations = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Fetching invitations...');
     fetchInvitations();
   }, []);
 
   const fetchInvitations = async () => {
     try {
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return;
+      if (!user.user) {
+        console.log('No authenticated user found');
+        return;
+      }
 
+      console.log('Fetching invitations for user:', user.user.email);
       const { data, error } = await supabase
         .from('project_invitations')
         .select(`
@@ -40,14 +45,18 @@ const PendingInvitations = () => {
           inviter_id,
           status,
           created_at,
-          project:projects!inner(name),
-          inviter:profiles!inner(name)
+          project:projects(name),
+          inviter:profiles!inviter_id(name)
         `)
         .eq('invitee_email', user.user.email)
         .eq('status', 'pending');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching invitations:', error);
+        throw error;
+      }
       
+      console.log('Fetched invitations:', data);
       setInvitations(data as unknown as Invitation[]);
     } catch (error) {
       console.error('Error fetching invitations:', error);
@@ -58,6 +67,7 @@ const PendingInvitations = () => {
 
   const handleInvitation = async (invitationId: string, accept: boolean) => {
     try {
+      console.log('Handling invitation:', { invitationId, accept });
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
 
@@ -113,7 +123,7 @@ const PendingInvitations = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-8">
       <h3 className="text-lg font-semibold">Pending Invitations</h3>
       <div className="space-y-2">
         {invitations.map((invitation) => (
