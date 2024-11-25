@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { Assignment } from "@/types/assignment";
+import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
 import CalendarAssignmentCard from "@/components/CalendarAssignmentCard";
@@ -65,8 +65,8 @@ const CalendarPage = () => {
         title: assignment.title,
         description: assignment.description || "",
         dueDate: new Date(assignment.due_date),
-        status: assignment.status,
-        priority: assignment.priority,
+        status: assignment.status as AssignmentStatus,
+        priority: assignment.priority as AssignmentPriority,
         assignees: assignment.assignment_assignees?.map((aa: any) => ({
           id: aa.user.id,
           name: aa.user.name,
