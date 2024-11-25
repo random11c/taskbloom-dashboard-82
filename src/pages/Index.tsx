@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import AssignmentList from "@/components/AssignmentList";
 import CreateAssignmentDialog from "@/components/CreateAssignmentDialog";
-import DashboardStats from "@/components/DashboardStats";
 import ProjectList from "@/components/ProjectList";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
-import TeamManagement from "@/components/TeamManagement";
 import PendingInvitations from "@/components/PendingInvitations";
+import ProjectDetailsSection from "@/components/ProjectDetailsSection";
 import { Assignment } from "@/types/assignment";
 import { supabase } from "@/integrations/supabase/client";
 import { useAssignments } from "@/hooks/useAssignments";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import ProjectActions from "@/components/ProjectActions";
 
 const Index = () => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>();
@@ -42,7 +39,6 @@ const Index = () => {
     enabled: !!selectedProjectId,
   });
 
-  // Set up realtime subscription for projects
   useEffect(() => {
     console.log('Setting up realtime subscription for projects...');
     const channel = supabase
@@ -162,15 +158,15 @@ const Index = () => {
           <MobileNav />
         </div>
         
-        <div className="p-4 md:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
+        <div className="p-4 md:p-6">
+          <div className="max-w-7xl mx-auto space-y-4">
             <PendingInvitations />
             
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
               Project Dashboard
             </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               <div className="md:col-span-3">
                 <ProjectList
                   onSelectProject={setSelectedProjectId}
@@ -178,34 +174,17 @@ const Index = () => {
                 />
               </div>
 
-              <div className="md:col-span-9 space-y-6">
+              <div className="md:col-span-9">
                 {selectedProjectId ? (
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 md:p-6 space-y-6">
-                    <ProjectActions
-                      projectId={selectedProjectId}
-                      isAdmin={isAdmin}
-                      onCreateClick={() => setIsCreateDialogOpen(true)}
-                      onProjectDeleted={() => setSelectedProjectId(undefined)}
-                    />
-
-                    <DashboardStats assignments={assignments} />
-
-                    <div className="mt-8">
-                      <AssignmentList 
-                        assignments={assignments}
-                        onStatusChange={handleStatusChange}
-                        onDeleteAssignment={handleDeleteAssignment}
-                        isAdmin={isAdmin}
-                      />
-                    </div>
-
-                    <div className="mt-8">
-                      <TeamManagement
-                        projectId={selectedProjectId}
-                        isAdmin={isAdmin}
-                      />
-                    </div>
-                  </div>
+                  <ProjectDetailsSection
+                    projectId={selectedProjectId}
+                    isAdmin={isAdmin}
+                    assignments={assignments}
+                    onCreateClick={() => setIsCreateDialogOpen(true)}
+                    onProjectDeleted={() => setSelectedProjectId(undefined)}
+                    onStatusChange={handleStatusChange}
+                    onDeleteAssignment={handleDeleteAssignment}
+                  />
                 ) : (
                   <div className="flex items-center justify-center h-full min-h-[400px] bg-white rounded-lg border border-gray-100 p-8">
                     <div className="text-center max-w-md">

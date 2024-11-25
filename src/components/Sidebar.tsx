@@ -49,7 +49,7 @@ const Sidebar = ({ isMobile, onClose }: SidebarProps) => {
 
   return (
     <div className={cn(
-      "h-screen bg-white border-r border-gray-200 p-4 flex flex-col",
+      "min-h-screen bg-white border-r border-gray-200 p-4 flex flex-col sticky top-0",
       isMobile ? "w-full" : "w-64 hidden md:flex"
     )}>
       <div className="flex items-center gap-2 mb-8">
