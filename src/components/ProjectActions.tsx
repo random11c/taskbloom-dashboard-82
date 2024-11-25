@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -12,11 +12,10 @@ import {
 interface ProjectActionsProps {
   projectId: string;
   isAdmin: boolean;
-  onCreateClick: () => void;
   onProjectDeleted: () => void;
 }
 
-const ProjectActions = ({ projectId, isAdmin, onCreateClick, onProjectDeleted }: ProjectActionsProps) => {
+const ProjectActions = ({ projectId, isAdmin, onProjectDeleted }: ProjectActionsProps) => {
   const { toast } = useToast();
 
   const handleDeleteProject = async () => {
@@ -49,46 +48,28 @@ const ProjectActions = ({ projectId, isAdmin, onCreateClick, onProjectDeleted }:
   };
 
   return (
-    <div className="flex justify-between items-center gap-4 bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-      <h2 className="text-lg font-semibold text-gray-900 truncate">
-        Project Details
+    <div className="flex justify-between items-center gap-4 bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+      <h2 className="text-xl font-semibold text-gray-900 truncate">
+        Project Overview
       </h2>
       {isAdmin && (
-        <div className="flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  onClick={onCreateClick}
-                  className="bg-primary hover:bg-primary/90"
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Create Assignment</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-sm">Create Assignment</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="destructive"
-                  onClick={handleDeleteProject}
-                  size="sm"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Delete Project</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-sm">Delete Project</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="destructive"
+                onClick={handleDeleteProject}
+                size="sm"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Project
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-sm">Delete Project</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
