@@ -10,7 +10,6 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -43,36 +42,13 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
     }
   };
 
-  const handlePriorityChange = async (assignmentId: string, newPriority: Assignment["priority"]) => {
-    try {
-      const { error } = await supabase
-        .from('assignments')
-        .update({ priority: newPriority })
-        .eq('id', assignmentId);
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error updating priority:', error);
-    }
-  };
-
-  const canEditPriority = async (assignmentId: string, userId: string) => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return false;
-
-    const { data: assignees } = await supabase
-      .from('assignment_assignees')
-      .select('user_id')
-      .eq('assignment_id', assignmentId)
-      .eq('user_id', data.user.id);
-
-    return assignees && assignees.length > 0;
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Assignments</h2>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Assignments</h2>
+          <p className="text-sm text-gray-500 mt-1">Manage your project tasks</p>
+        </div>
         {isAdmin && (
           <Button
             onClick={onCreateClick}
@@ -86,47 +62,48 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
 
       <div className="space-y-4">
         {assignments.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
-            No assignments created yet. {isAdmin && "Create your first assignment to get started!"}
-          </p>
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">
+              No assignments created yet. {isAdmin && "Create your first assignment to get started!"}
+            </p>
+          </div>
         ) : (
           assignments.map((assignment) => (
             <div
               key={assignment.id}
-              className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors gap-4"
+              className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow gap-4"
             >
               <div className="flex-1 min-w-0">
-                <h3 className="font-medium text-gray-900 truncate">{assignment.title}</h3>
-                <p className="text-sm text-gray-500 mt-1 line-clamp-2">
-                  {assignment.description}
-                </p>
-                <div className="flex flex-wrap items-center gap-2 mt-2">
-                  <Select
-                    defaultValue={assignment.priority}
-                    onValueChange={(value: Assignment["priority"]) => 
-                      handlePriorityChange(assignment.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue>
-                        <Badge className={getPriorityColor(assignment.priority)}>
-                          {assignment.priority}
-                        </Badge>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900">{assignment.title}</h3>
+                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                      {assignment.description}
+                    </p>
+                  </div>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-2"
+                      onClick={() => onDeleteAssignment(assignment.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-4 mt-4">
+                  <Badge className={getPriorityColor(assignment.priority)}>
+                    {assignment.priority}
+                  </Badge>
                   <span className="text-sm text-gray-500">
-                    Due: {format(assignment.dueDate, "MMM d, yyyy")}
+                    Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 <div className="flex -space-x-2">
                   {assignment.assignees.map((assignee) => (
                     <img
@@ -139,42 +116,29 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={assignment.status}
-                    onValueChange={(value: Assignment["status"]) =>
-                      onStatusChange(assignment.id, value)
-                    }
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue>
-                        <span
-                          className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
-                            assignment.status
-                          )}`}
-                        >
-                          {assignment.status}
-                        </span>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in-progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => onDeleteAssignment(assignment.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                <Select
+                  value={assignment.status}
+                  onValueChange={(value: Assignment["status"]) =>
+                    onStatusChange(assignment.id, value)
+                  }
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue>
+                      <span
+                        className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
+                          assignment.status
+                        )}`}
+                      >
+                        {assignment.status}
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           ))

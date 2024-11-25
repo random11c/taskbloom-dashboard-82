@@ -24,18 +24,20 @@ const ProjectDetailsSection = ({
   onDeleteAssignment,
 }: ProjectDetailsSectionProps) => {
   return (
-    <div className="space-y-6 bg-gray-50 p-6 rounded-lg max-w-[1200px] mx-auto">
-      <ProjectActions
-        projectId={projectId}
-        isAdmin={isAdmin}
-        onProjectDeleted={onProjectDeleted}
-      />
+    <div className="space-y-8 max-w-[1200px] mx-auto">
+      <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+        <ProjectActions
+          projectId={projectId}
+          isAdmin={isAdmin}
+          onProjectDeleted={onProjectDeleted}
+        />
+      </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3">
         <DashboardStats assignments={assignments} />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <AssignmentList 
           assignments={assignments}
           onStatusChange={onStatusChange}
@@ -45,7 +47,7 @@ const ProjectDetailsSection = ({
         />
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <TeamManagement
           projectId={projectId}
           isAdmin={isAdmin}
