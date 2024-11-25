@@ -24,7 +24,7 @@ const ProjectDetailsSection = ({
   onDeleteAssignment,
 }: ProjectDetailsSectionProps) => {
   return (
-    <div className="space-y-8 max-w-[1200px] mx-auto">
+    <div className="space-y-6 animate-fade-in">
       <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
         <ProjectActions
           projectId={projectId}
@@ -33,9 +33,7 @@ const ProjectDetailsSection = ({
         />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <DashboardStats assignments={assignments} />
-      </div>
+      <DashboardStats assignments={assignments} />
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <AssignmentList 
