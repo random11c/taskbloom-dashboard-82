@@ -8,8 +8,14 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Users } from "lucide-react";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -50,10 +56,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
           <p className="text-sm text-gray-500 mt-1">Manage your project tasks</p>
         </div>
         {isAdmin && (
-          <Button
-            onClick={onCreateClick}
-            className="bg-primary hover:bg-primary/90"
-          >
+          <Button onClick={onCreateClick}>
             <Plus className="h-4 w-4 mr-2" />
             Add Assignment
           </Button>
@@ -100,22 +103,37 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
                   <span className="text-sm text-gray-500">
                     Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
                   </span>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-400" />
+                          <span className="text-sm text-gray-500">
+                            {assignment.assignees.length} assignee{assignment.assignees.length !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <div className="space-y-1">
+                          {assignment.assignees.map(assignee => (
+                            <div key={assignee.id} className="flex items-center gap-2">
+                              <img
+                                src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
+                                alt={assignee.name}
+                                className="w-5 h-5 rounded-full"
+                              />
+                              <span>{assignee.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
 
               <div className="flex items-center gap-6">
-                <div className="flex -space-x-2">
-                  {assignment.assignees.map((assignee) => (
-                    <img
-                      key={assignee.id}
-                      src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
-                      alt={assignee.name}
-                      className="w-8 h-8 rounded-full border-2 border-white"
-                      title={assignee.name}
-                    />
-                  ))}
-                </div>
-
                 <Select
                   value={assignment.status}
                   onValueChange={(value: Assignment["status"]) =>

@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Users } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -134,50 +140,53 @@ const CalendarPage = () => {
                 {selectedDate && getDayAssignments(selectedDate).map(assignment => (
                   <div
                     key={assignment.id}
-                    className="p-4 border rounded-lg bg-white shadow-sm"
+                    className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium">{assignment.title}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-sm ${
-                          assignment.priority === 'high' ? 'bg-red-100 text-red-700' :
-                          assignment.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {assignment.priority}
-                        </span>
-                        <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(assignment.status)}`}>
-                          {assignment.status}
-                        </span>
-                      </div>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-center gap-2 cursor-pointer">
+                              <Users className="h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-500">
+                                {assignment.assignees.length}
+                              </span>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-1">
+                              {assignment.assignees.map(assignee => (
+                                <div key={assignee.id} className="flex items-center gap-2">
+                                  <img
+                                    src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
+                                    alt={assignee.name}
+                                    className="w-5 h-5 rounded-full"
+                                  />
+                                  <span>{assignee.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     
                     <p className="text-sm text-gray-500 mt-1">
                       {assignment.description}
                     </p>
 
-                    <div className="mt-2 flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm text-gray-500">
-                        Due {format(assignment.dueDate, 'h:mm a')}
+                    <div className="mt-2 flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <CalendarIcon className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-500">
+                          Due {format(assignment.dueDate, 'h:mm a')}
+                        </span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(assignment.status)}`}>
+                        {assignment.status}
                       </span>
                     </div>
-
-                    {assignment.assignees.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-sm text-gray-500 mb-1">Assignees:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {assignment.assignees.map(assignee => (
-                            <span
-                              key={assignee.id}
-                              className="inline-flex items-center px-2 py-1 rounded-full bg-gray-100 text-sm"
-                            >
-                              {assignee.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 ))}
 
