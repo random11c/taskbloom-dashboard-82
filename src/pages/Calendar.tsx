@@ -1,16 +1,11 @@
 import { useEffect, useState } from "react";
-import { Calendar as CalendarIcon, Users } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
-import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
+import { Assignment } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import CalendarAssignmentCard from "@/components/CalendarAssignmentCard";
 
 const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -70,8 +65,8 @@ const CalendarPage = () => {
         title: assignment.title,
         description: assignment.description || "",
         dueDate: new Date(assignment.due_date),
-        status: assignment.status as AssignmentStatus,
-        priority: assignment.priority as AssignmentPriority,
+        status: assignment.status,
+        priority: assignment.priority,
         assignees: assignment.assignment_assignees?.map((aa: any) => ({
           id: aa.user.id,
           name: aa.user.name,
@@ -92,17 +87,6 @@ const CalendarPage = () => {
     return assignments.filter(assignment => 
       format(assignment.dueDate, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd')
     );
-  };
-
-  const getStatusColor = (status: AssignmentStatus) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "in-progress":
-        return "bg-blue-100 text-blue-800";
-      case "pending":
-        return "bg-gray-100 text-gray-800";
-    }
   };
 
   if (isLoading) {
@@ -138,56 +122,7 @@ const CalendarPage = () => {
               
               <div className="space-y-4">
                 {selectedDate && getDayAssignments(selectedDate).map(assignment => (
-                  <div
-                    key={assignment.id}
-                    className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium">{assignment.title}</h3>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-2 cursor-pointer">
-                              <Users className="h-4 w-4 text-gray-400" />
-                              <span className="text-sm text-gray-500">
-                                {assignment.assignees.length}
-                              </span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-1">
-                              {assignment.assignees.map(assignee => (
-                                <div key={assignee.id} className="flex items-center gap-2">
-                                  <img
-                                    src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
-                                    alt={assignee.name}
-                                    className="w-5 h-5 rounded-full"
-                                  />
-                                  <span>{assignee.name}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    
-                    <p className="text-sm text-gray-500 mt-1">
-                      {assignment.description}
-                    </p>
-
-                    <div className="mt-2 flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm text-gray-500">
-                          Due {format(assignment.dueDate, 'h:mm a')}
-                        </span>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(assignment.status)}`}>
-                        {assignment.status}
-                      </span>
-                    </div>
-                  </div>
+                  <CalendarAssignmentCard key={assignment.id} assignment={assignment} />
                 ))}
 
                 {selectedDate && getDayAssignments(selectedDate).length === 0 && (
