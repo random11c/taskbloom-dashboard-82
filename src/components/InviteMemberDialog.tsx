@@ -25,13 +25,19 @@ const InviteMemberDialog = ({
     e.preventDefault();
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No authenticated user");
+
       const { error } = await supabase
         .from('project_invitations')
-        .insert([
-          { project_id: projectId, invitee_email: email }
-        ]);
+        .insert({
+          project_id: projectId,
+          invitee_email: email,
+          inviter_id: user.id
+        });
 
       if (error) throw error;
+      
       toast({
         title: "Invitation Sent",
         description: "An invitation has been sent to the provided email.",
