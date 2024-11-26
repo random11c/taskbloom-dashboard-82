@@ -21,7 +21,6 @@ const ProjectList = ({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Add query to check if user is admin
   const { data: currentUser } = useQuery({
     queryKey: ['current-user'],
     queryFn: async () => {
@@ -30,7 +29,6 @@ const ProjectList = ({
     },
   });
 
-  // Fetch projects with owner information
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -56,7 +54,6 @@ const ProjectList = ({
     },
   });
 
-  // Create project mutation
   const createProjectMutation = useMutation({
     mutationFn: (variables: { name: string; description: string }) => 
       createProject(variables),
@@ -67,10 +64,10 @@ const ProjectList = ({
     },
   });
 
-  // Set up realtime subscription for projects
   useEffect(() => {
-    console.log('Setting up realtime subscription for projects...');
-    const channel = supabase
+    console.log('Setting up realtime subscription for projects and assignments...');
+    
+    const projectsChannel = supabase
       .channel('projects_changes')
       .on(
         'postgres_changes',
@@ -86,9 +83,26 @@ const ProjectList = ({
       )
       .subscribe();
 
+    const assignmentsChannel = supabase
+      .channel('assignments_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignments'
+        },
+        (payload) => {
+          console.log('Assignment change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['assignments'] });
+        }
+      )
+      .subscribe();
+
     return () => {
       console.log('Cleaning up subscriptions');
-      supabase.removeChannel(channel);
+      supabase.removeChannel(projectsChannel);
+      supabase.removeChannel(assignmentsChannel);
     };
   }, [queryClient]);
 

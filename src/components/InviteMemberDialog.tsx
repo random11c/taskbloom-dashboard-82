@@ -1,15 +1,10 @@
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "./ui/use-toast";
 
 interface InviteMemberDialogProps {
   projectId: string;
@@ -29,34 +24,24 @@ const InviteMemberDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const { data: inviter } = await supabase.auth.getUser();
-      if (!inviter.user) throw new Error("No authenticated user");
-
-      // Create invitation
-      const { error: inviteError } = await supabase
+      const { error } = await supabase
         .from('project_invitations')
-        .insert({
-          project_id: projectId,
-          inviter_id: inviter.user.id,
-          invitee_email: email,
-        });
+        .insert([
+          { project_id: projectId, invitee_email: email }
+        ]);
 
-      if (inviteError) throw inviteError;
-
+      if (error) throw error;
       toast({
         title: "Invitation Sent",
-        description: `An invitation has been sent to ${email}`,
+        description: "An invitation has been sent to the provided email.",
       });
-      
       onOpenChange(false);
-      setEmail("");
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error sending invitation:', error);
       toast({
         title: "Error",
-        description: "Failed to send invitation. Please try again.",
+        description: "Failed to send invitation.",
         variant: "destructive",
       });
     } finally {
@@ -66,13 +51,16 @@ const InviteMemberDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Invite Team Member</DialogTitle>
+          <DialogDescription>
+            Send an invitation to collaborate on this project.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
+            <Label htmlFor="email">Email address</Label>
             <Input
               id="email"
               type="email"
@@ -90,7 +78,11 @@ const InviteMemberDialog = ({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="bg-[#9b87f5] hover:bg-[#7E69AB]"
+            >
               {isLoading ? "Sending..." : "Send Invitation"}
             </Button>
           </div>

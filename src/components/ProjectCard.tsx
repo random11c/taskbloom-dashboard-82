@@ -2,6 +2,7 @@ import { Folder, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
+import { format } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -113,6 +114,9 @@ const ProjectCard = ({
           {project.description}
         </p>
       )}
+      <p className="mt-2 text-xs text-[#8E9196]">
+        Created on {format(new Date(project.created_at), "MMM d, yyyy")}
+      </p>
     </div>
   );
 };

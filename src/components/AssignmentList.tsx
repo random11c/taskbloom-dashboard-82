@@ -37,18 +37,18 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
       case "high":
         return "text-red-600 bg-red-100";
       case "medium":
-        return "text-yellow-600 bg-yellow-100";
+        return "text-[#7E69AB] bg-[#E5DEFF]";
       case "low":
-        return "text-green-600 bg-green-100";
+        return "text-[#6E59A5] bg-[#F1F0FB]";
     }
   };
 
   const getStatusColor = (status: Assignment["status"]) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-[#E5DEFF] text-[#7E69AB]";
       case "in-progress":
-        return "bg-[#E5DEFF] text-[#6E59A5]";
+        return "bg-[#F1F0FB] text-[#6E59A5]";
       case "pending":
         return "bg-gray-100 text-gray-800";
     }
