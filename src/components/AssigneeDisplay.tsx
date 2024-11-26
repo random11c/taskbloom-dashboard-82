@@ -1,11 +1,11 @@
 import { Coworker } from "@/types/assignment";
-import { Users } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AssigneeDisplayProps {
   assignees: Coworker[];
@@ -13,33 +13,29 @@ interface AssigneeDisplayProps {
 }
 
 const AssigneeDisplay = ({ assignees, className = "" }: AssigneeDisplayProps) => {
+  if (assignees.length === 0) return null;
+
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className={`flex items-center gap-2 cursor-pointer ${className}`}>
-            <Users className="h-4 w-4 text-gray-400" />
-            <span className="text-sm text-gray-500">
-              {assignees.length} assignee{assignees.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <div className="space-y-1">
-            {assignees.map(assignee => (
-              <div key={assignee.id} className="flex items-center gap-2">
-                <img
+    <div className={`flex -space-x-2 ${className}`}>
+      {assignees.map(assignee => (
+        <TooltipProvider key={assignee.id}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Avatar className="h-8 w-8 border-2 border-white hover:z-10">
+                <AvatarImage
                   src={assignee.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignee.name)}`}
                   alt={assignee.name}
-                  className="w-5 h-5 rounded-full"
                 />
-                <span>{assignee.name}</span>
-              </div>
-            ))}
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+                <AvatarFallback>{assignee.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{assignee.email}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+    </div>
   );
 };
 

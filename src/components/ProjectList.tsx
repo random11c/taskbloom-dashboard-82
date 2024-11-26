@@ -20,7 +20,16 @@ const ProjectList = ({
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch projects
+  // Add query to check if user is admin
+  const { data: currentUser } = useQuery({
+    queryKey: ['current-user'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
+  });
+
+  // Fetch projects with owner information
   const { data: projects = [], isLoading } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
@@ -30,7 +39,10 @@ const ProjectList = ({
 
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          owner_id
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -102,6 +114,18 @@ const ProjectList = ({
 
   const handleDeleteProject = async (projectId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Check if user is the owner
+    const project = projects.find(p => p.id === projectId);
+    if (!project || project.owner_id !== currentUser?.id) {
+      toast({
+        title: "Permission Denied",
+        description: "Only project owners can delete projects",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm("Are you sure you want to delete this project?")) return;
 
     try {

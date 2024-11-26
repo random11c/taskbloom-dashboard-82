@@ -93,7 +93,7 @@ const CalendarPage = () => {
     return (
       <div className="flex h-screen">
         <Sidebar />
-        <div className="flex-1 p-8">Loading calendar...</div>
+        <div className="flex-1 ml-64 p-8">Loading calendar...</div>
       </div>
     );
   }
@@ -101,7 +101,7 @@ const CalendarPage = () => {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 ml-64 p-8 overflow-y-auto">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-8">Calendar</h1>
           

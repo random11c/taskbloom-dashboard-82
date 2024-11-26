@@ -18,13 +18,13 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar />
       
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 ml-64"> {/* Added ml-64 to account for fixed sidebar width */}
         <div className="sticky top-0 z-50 bg-white border-b border-gray-200 px-4 py-2 md:hidden">
           <MobileNav />
         </div>
         
-        <main className="flex-1 overflow-auto">
-          <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        <main className="overflow-auto p-4 md:p-6">
+          <div className="max-w-7xl mx-auto">
             <PendingInvitations />
             
             {selectedProjectId ? (
