@@ -11,6 +11,17 @@ import { format } from "date-fns";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import AssigneeDisplay from "./AssigneeDisplay";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -37,7 +48,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
       case "completed":
         return "bg-green-100 text-green-800";
       case "in-progress":
-        return "bg-blue-100 text-blue-800";
+        return "bg-[#E5DEFF] text-[#6E59A5]";
       case "pending":
         return "bg-gray-100 text-gray-800";
     }
@@ -47,11 +58,11 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Assignments</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage your project tasks</p>
+          <h2 className="text-xl font-semibold text-[#1A1F2C]">Assignments</h2>
+          <p className="text-sm text-[#8E9196] mt-1">Manage your project tasks</p>
         </div>
         {isAdmin && (
-          <Button onClick={onCreateClick}>
+          <Button onClick={onCreateClick} className="bg-[#9b87f5] hover:bg-[#7E69AB]">
             <Plus className="h-4 w-4 mr-2" />
             Add Assignment
           </Button>
@@ -60,8 +71,8 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
 
       <div className="space-y-4">
         {assignments.length === 0 ? (
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">
+          <div className="text-center py-12 bg-[#F1F0FB] rounded-lg">
+            <p className="text-[#8E9196]">
               No assignments created yet. {isAdmin && "Create your first assignment to get started!"}
             </p>
           </div>
@@ -69,25 +80,45 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
           assignments.map((assignment) => (
             <div
               key={assignment.id}
-              className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white border border-gray-100 rounded-lg shadow-sm hover:shadow-md transition-shadow gap-4"
+              className="flex flex-col md:flex-row md:items-center justify-between p-6 bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-shadow gap-4"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">{assignment.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-2">
+                    <h3 className="text-lg font-medium text-[#1A1F2C]">{assignment.title}</h3>
+                    <p className="text-sm text-[#8E9196] mt-1 line-clamp-2">
                       {assignment.description}
                     </p>
                   </div>
                   {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
-                      onClick={() => onDeleteAssignment(assignment.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this assignment? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDeleteAssignment(assignment.id)}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </div>
 
@@ -95,7 +126,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
                   <Badge className={getPriorityColor(assignment.priority)}>
                     {assignment.priority}
                   </Badge>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-[#8E9196]">
                     Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
                   </span>
                   <AssigneeDisplay assignees={assignment.assignees} />
