@@ -64,10 +64,11 @@ const ProjectList = ({
     },
   });
 
+  // Set up realtime subscription for projects
   useEffect(() => {
-    console.log('Setting up realtime subscription for projects and assignments...');
+    console.log('Setting up realtime subscription for projects...');
     
-    const projectsChannel = supabase
+    const channel = supabase
       .channel('projects_changes')
       .on(
         'postgres_changes',
@@ -83,26 +84,9 @@ const ProjectList = ({
       )
       .subscribe();
 
-    const assignmentsChannel = supabase
-      .channel('assignments_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'assignments'
-        },
-        (payload) => {
-          console.log('Assignment change detected:', payload);
-          queryClient.invalidateQueries({ queryKey: ['assignments'] });
-        }
-      )
-      .subscribe();
-
     return () => {
-      console.log('Cleaning up subscriptions');
-      supabase.removeChannel(projectsChannel);
-      supabase.removeChannel(assignmentsChannel);
+      console.log('Cleaning up projects subscription');
+      supabase.removeChannel(channel);
     };
   }, [queryClient]);
 

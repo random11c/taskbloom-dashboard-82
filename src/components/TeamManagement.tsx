@@ -12,6 +12,7 @@ import InviteMemberDialog from "./InviteMemberDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "./ui/use-toast";
+import { useEffect } from "react";
 
 interface TeamMember {
   id: string;
@@ -71,7 +72,7 @@ const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
         name: member.user.name,
         email: member.user.email,
         avatar: member.user.avatar,
-        role: member.role as "admin" | "member",
+        role: member.role,
         isOwner: member.user.id === projectData.owner_id
       }));
     },
@@ -103,6 +104,33 @@ const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
       });
     },
   });
+
+  // Set up realtime subscription
+  useEffect(() => {
+    console.log('Setting up realtime subscription for team members...');
+    
+    const channel = supabase
+      .channel('team_members_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'project_members',
+          filter: `project_id=eq.${projectId}`
+        },
+        (payload) => {
+          console.log('Project members change detected:', payload);
+          queryClient.invalidateQueries({ queryKey: ['team-members', projectId] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('Cleaning up team members subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [projectId, queryClient]);
 
   if (isLoading) {
     return <div>Loading team members...</div>;
@@ -152,8 +180,8 @@ const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="editor">Editor</SelectItem>
                 </SelectContent>
               </Select>
             ) : (

@@ -31,7 +31,8 @@ const ProjectCard = ({
   const { toast } = useToast();
 
   const handleDeleteProject = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.preventDefault(); // Prevent the card click event
+    e.stopPropagation(); // Prevent event bubbling
     
     try {
       const { error } = await supabase
@@ -79,7 +80,7 @@ const ProjectCard = ({
         </div>
         {isOwner && (
           <AlertDialog>
-            <AlertDialogTrigger asChild>
+            <AlertDialogTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
                 size="icon"
@@ -88,7 +89,7 @@ const ProjectCard = ({
                 <Trash2 className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent>
+            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Project</AlertDialogTitle>
                 <AlertDialogDescription>
@@ -96,7 +97,7 @@ const ProjectCard = ({
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                 <AlertDialogAction
                   onClick={handleDeleteProject}
                   className="bg-red-500 hover:bg-red-600"
