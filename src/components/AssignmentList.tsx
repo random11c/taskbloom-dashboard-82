@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -32,6 +33,8 @@ interface AssignmentListProps {
 }
 
 const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCreateClick, isAdmin }: AssignmentListProps) => {
+  const queryClient = useQueryClient();
+
   const getPriorityColor = (priority: Assignment["priority"]) => {
     switch (priority) {
       case "high":
@@ -52,6 +55,30 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
       case "pending":
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const handleStatusChange = async (assignmentId: string, newStatus: Assignment["status"]) => {
+    const oldAssignments = queryClient.getQueryData(['assignments']) as Assignment[];
+    queryClient.setQueryData(['assignments'], (old: Assignment[] | undefined) => {
+      if (!old) return old;
+      return old.map(assignment => 
+        assignment.id === assignmentId 
+          ? { ...assignment, status: newStatus }
+          : assignment
+      );
+    });
+
+    await onStatusChange(assignmentId, newStatus);
+  };
+
+  const handleDelete = async (assignmentId: string) => {
+    const oldAssignments = queryClient.getQueryData(['assignments']) as Assignment[];
+    queryClient.setQueryData(['assignments'], (old: Assignment[] | undefined) => {
+      if (!old) return old;
+      return old.filter(assignment => assignment.id !== assignmentId);
+    });
+
+    await onDeleteAssignment(assignmentId);
   };
 
   return (
@@ -111,7 +138,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => onDeleteAssignment(assignment.id)}
+                            onClick={() => handleDelete(assignment.id)}
                             className="bg-red-500 hover:bg-red-600"
                           >
                             Delete
@@ -137,7 +164,7 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
                 <Select
                   value={assignment.status}
                   onValueChange={(value: Assignment["status"]) =>
-                    onStatusChange(assignment.id, value)
+                    handleStatusChange(assignment.id, value)
                   }
                 >
                   <SelectTrigger className="w-[140px]">
