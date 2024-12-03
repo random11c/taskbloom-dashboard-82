@@ -26,7 +26,7 @@ const CalendarAssignmentCard = ({ assignment }: CalendarAssignmentCardProps) => 
         <AssigneeDisplay assignees={assignment.assignees} />
       </div>
       
-      <p className="text-sm text-gray-500 mt-1">
+      <p className="text-sm text-gray-500 mt-1 line-clamp-2">
         {assignment.description}
       </p>
 
@@ -34,7 +34,7 @@ const CalendarAssignmentCard = ({ assignment }: CalendarAssignmentCardProps) => 
         <div className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4 text-gray-400" />
           <span className="text-sm text-gray-500">
-            Due {format(assignment.dueDate, 'h:mm a')}
+            Due {format(new Date(assignment.dueDate), 'h:mm a')}
           </span>
         </div>
         <span className={`px-2 py-1 rounded-full text-sm ${getStatusColor(assignment.status)}`}>

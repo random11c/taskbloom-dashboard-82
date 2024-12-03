@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
 import { Assignment, AssignmentStatus, AssignmentPriority } from "@/types/assignment";
 import { format } from "date-fns";
 import Sidebar from "@/components/Sidebar";
 import CalendarAssignmentCard from "@/components/CalendarAssignmentCard";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import CommentSection from "@/components/CommentSection";
+import { Badge } from "@/components/ui/badge";
 
 const CalendarPage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
 
   useEffect(() => {
     fetchAssignments();
@@ -89,6 +92,21 @@ const CalendarPage = () => {
     );
   };
 
+  // Function to modify calendar day content
+  const modifyDay = (date: Date) => {
+    const dayAssignments = getDayAssignments(date);
+    if (dayAssignments.length > 0) {
+      return (
+        <div className="relative w-full h-full">
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+            <Badge variant="secondary" className="h-1.5 w-1.5 rounded-full p-0" />
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen">
@@ -111,6 +129,20 @@ const CalendarPage = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
+                modifiers={{
+                  hasAssignment: (date) => getDayAssignments(date).length > 0
+                }}
+                modifiersStyles={{
+                  hasAssignment: { fontWeight: 'bold' }
+                }}
+                components={{
+                  DayContent: ({ date }) => (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span>{date.getDate()}</span>
+                      {modifyDay(date)}
+                    </div>
+                  )
+                }}
                 className="rounded-md border shadow bg-white"
               />
             </div>
@@ -122,7 +154,22 @@ const CalendarPage = () => {
               
               <div className="space-y-4">
                 {selectedDate && getDayAssignments(selectedDate).map(assignment => (
-                  <CalendarAssignmentCard key={assignment.id} assignment={assignment} />
+                  <Dialog key={assignment.id}>
+                    <DialogTrigger asChild>
+                      <div onClick={() => setSelectedAssignment(assignment)} className="cursor-pointer">
+                        <CalendarAssignmentCard assignment={assignment} />
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                      <DialogHeader>
+                        <DialogTitle>{assignment.title}</DialogTitle>
+                      </DialogHeader>
+                      <div className="mt-4">
+                        <p className="text-gray-600 mb-4">{assignment.description}</p>
+                        <CommentSection assignmentId={assignment.id} />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 ))}
 
                 {selectedDate && getDayAssignments(selectedDate).length === 0 && (
