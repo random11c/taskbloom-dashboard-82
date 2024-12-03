@@ -52,8 +52,7 @@ export const useTeamMembers = (projectId: string | undefined) => {
           email: projectData.owner.email,
           avatar: projectData.owner.avatar,
           role: "editor",
-          projectIds: [projectId],
-          createdAt: new Date(projectData.owner.created_at)
+          isOwner: true
         },
         ...memberData.map((member): TeamMember => ({
           id: member.user.id,
@@ -61,8 +60,7 @@ export const useTeamMembers = (projectId: string | undefined) => {
           email: member.user.email,
           avatar: member.user.avatar,
           role: member.role as "editor" | "viewer",
-          projectIds: [member.project_id],
-          createdAt: new Date(member.user.created_at)
+          isOwner: false
         }))
       ];
 
