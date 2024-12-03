@@ -7,6 +7,11 @@ export interface User {
   createdAt: Date;
 }
 
-export interface TeamMember extends User {
-  projectIds: string[];
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  role: "editor" | "viewer";
+  isOwner: boolean;
 }
