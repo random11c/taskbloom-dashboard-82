@@ -45,13 +45,13 @@ export const useTeamMembers = (projectId: string | undefined) => {
       if (memberError) throw memberError;
 
       // Combine owner and members, ensuring no duplicates
-      const allMembers = [
+      const allMembers: TeamMember[] = [
         {
           id: projectData.owner.id,
           name: projectData.owner.name,
           email: projectData.owner.email,
           avatar: projectData.owner.avatar,
-          role: "editor" as const,
+          role: "editor",
           projectIds: [projectId],
           createdAt: new Date(projectData.owner.created_at)
         },
