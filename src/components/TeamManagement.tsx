@@ -19,7 +19,7 @@ interface TeamMember {
   name: string;
   email: string;
   avatar: string | null;
-  role: string;
+  role: "editor" | "viewer";
   isOwner: boolean;
 }
 
@@ -52,7 +52,17 @@ const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
 
       if (projectError) throw projectError;
 
-      const { data, error } = await supabase
+      // First get the owner's profile
+      const { data: ownerData, error: ownerError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', projectData.owner_id)
+        .single();
+
+      if (ownerError) throw ownerError;
+
+      // Then get all project members
+      const { data: memberData, error: memberError } = await supabase
         .from('project_members')
         .select(`
           role,
@@ -65,17 +75,31 @@ const TeamManagement = ({ projectId, isAdmin }: TeamManagementProps) => {
         `)
         .eq('project_id', projectId);
 
-      if (error) throw error;
+      if (memberError) throw memberError;
 
-      return data.map(member => ({
-        id: member.user.id,
-        name: member.user.name,
-        email: member.user.email,
-        avatar: member.user.avatar,
-        role: member.role,
-        isOwner: member.user.id === projectData.owner_id
-      }));
+      const allMembers: TeamMember[] = [
+        {
+          id: ownerData.id,
+          name: ownerData.name,
+          email: ownerData.email,
+          avatar: ownerData.avatar,
+          role: "editor",
+          isOwner: true
+        },
+        ...memberData.map((member): TeamMember => ({
+          id: member.user.id,
+          name: member.user.name,
+          email: member.user.email,
+          avatar: member.user.avatar,
+          role: member.role as "editor" | "viewer",
+          isOwner: false
+        }))
+      ];
+
+      // Remove duplicates based on user ID
+      return Array.from(new Map(allMembers.map(member => [member.id, member])).values());
     },
+    enabled: !!projectId,
   });
 
   const updateRoleMutation = useMutation({

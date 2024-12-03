@@ -23,14 +23,25 @@ const ProjectView = ({ projectId, onProjectDeleted }: ProjectViewProps) => {
   const { data: isAdmin = false } = useQuery({
     queryKey: ['is-admin', projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .rpc('is_project_admin', { p_project_id: projectId });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
 
-      if (error) {
-        console.error('Error checking admin status:', error);
-        return false;
-      }
-      return data;
+      const { data: projectData } = await supabase
+        .from('projects')
+        .select('owner_id')
+        .eq('id', projectId)
+        .single();
+
+      if (projectData?.owner_id === user.id) return true;
+
+      const { data: memberData } = await supabase
+        .from('project_members')
+        .select('role')
+        .eq('project_id', projectId)
+        .eq('user_id', user.id)
+        .single();
+
+      return memberData?.role === 'editor';
     },
     enabled: !!projectId,
   });
