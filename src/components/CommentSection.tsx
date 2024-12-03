@@ -29,7 +29,7 @@ const CommentSection = ({ assignmentId }: CommentSectionProps) => {
   const queryClient = useQueryClient();
   const session = useSession();
 
-  const { data: comments = [], isLoading } = useQuery<Comment[]>({
+  const { data: comments = [], isLoading } = useQuery({
     queryKey: ['comments', assignmentId],
     queryFn: async () => {
       const { data, error } = await supabase

@@ -108,14 +108,14 @@ const PendingInvitations = () => {
 
       if (updateError) throw updateError;
 
-      // If accepted, add user to project members
+      // If accepted, add user to project members with viewer role
       if (accept) {
         const { error: memberError } = await supabase
           .from('project_members')
           .insert({
             project_id: invitation.project_id,
             user_id: user.user.id,
-            role: 'member'
+            role: 'viewer'
           });
 
         if (memberError) throw memberError;
@@ -130,6 +130,10 @@ const PendingInvitations = () => {
           ? `You have joined ${invitation.project?.name || 'the project'}`
           : `You have declined the invitation to join ${invitation.project?.name || 'the project'}`,
       });
+
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['team-members'] });
     } catch (error) {
       console.error('Error handling invitation:', error);
       toast({
