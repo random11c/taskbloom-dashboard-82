@@ -6,8 +6,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 import { useSession } from "@supabase/auth-helpers-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
-import { ChevronDown } from "lucide-react";
 
 interface CommentSectionProps {
   assignmentId: string;
@@ -27,7 +25,6 @@ interface Comment {
 
 const CommentSection = ({ assignmentId }: CommentSectionProps) => {
   const [newComment, setNewComment] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const session = useSession();
@@ -99,49 +96,42 @@ const CommentSection = ({ assignmentId }: CommentSectionProps) => {
   }
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
-      <CollapsibleTrigger className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
-        Comments ({comments.length})
-      </CollapsibleTrigger>
-      
-      <CollapsibleContent className="mt-4 space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <Textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="min-h-[80px]"
-          />
-          <Button 
-            type="submit" 
-            size="sm"
-            disabled={addCommentMutation.isPending}
-          >
-            {addCommentMutation.isPending ? 'Adding...' : 'Add Comment'}
-          </Button>
-        </form>
+    <div className="mt-4 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-2">
+        <Textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          className="min-h-[80px]"
+        />
+        <Button 
+          type="submit" 
+          size="sm"
+          disabled={addCommentMutation.isPending}
+        >
+          {addCommentMutation.isPending ? 'Adding...' : 'Add Comment'}
+        </Button>
+      </form>
 
-        <div className="space-y-3">
-          {comments.map((comment) => (
-            <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
-              <div className="flex items-center gap-2 mb-2">
-                <img
-                  src={comment.author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author.name)}`}
-                  alt={comment.author.name}
-                  className="w-6 h-6 rounded-full"
-                />
-                <span className="font-medium text-sm">{comment.author.name}</span>
-                <span className="text-gray-500 text-xs">
-                  {format(new Date(comment.created_at), "MMM d, yyyy 'at' h:mm a")}
-                </span>
-              </div>
-              <p className="text-sm text-gray-700">{comment.content}</p>
+      <div className="space-y-3">
+        {comments.map((comment) => (
+          <div key={comment.id} className="bg-gray-50 p-3 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <img
+                src={comment.author.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(comment.author.name)}`}
+                alt={comment.author.name}
+                className="w-6 h-6 rounded-full"
+              />
+              <span className="font-medium text-sm">{comment.author.name}</span>
+              <span className="text-gray-500 text-xs">
+                {format(new Date(comment.created_at), "MMM d, yyyy 'at' h:mm a")}
+              </span>
             </div>
-          ))}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+            <p className="text-sm text-gray-700">{comment.content}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
