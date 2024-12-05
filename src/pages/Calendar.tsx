@@ -44,12 +44,24 @@ const CalendarPage = () => {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
 
+      // Fetch all projects the user has access to
       const { data: memberProjects } = await supabase
         .from('project_members')
         .select('project_id')
         .eq('user_id', user.user.id);
 
-      const projectIds = memberProjects?.map(p => p.project_id) || [];
+      const { data: ownedProjects } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('owner_id', user.user.id);
+
+      // Combine project IDs from both owned and member projects
+      const projectIds = [
+        ...(memberProjects?.map(p => p.project_id) || []),
+        ...(ownedProjects?.map(p => p.id) || [])
+      ];
+
+      if (projectIds.length === 0) return;
 
       const { data: assignmentsData, error } = await supabase
         .from('assignments')
@@ -62,6 +74,8 @@ const CalendarPage = () => {
         .in('project_id', projectIds);
 
       if (error) throw error;
+
+      console.log('Fetched assignments:', assignmentsData);
 
       const formattedAssignments = assignmentsData.map((assignment): Assignment => ({
         id: assignment.id,
@@ -97,10 +111,11 @@ const CalendarPage = () => {
     const dayAssignments = getDayAssignments(date);
     if (dayAssignments.length > 0) {
       return (
-        <div className="relative w-full h-full">
-          <div className="absolute bottom-0 left-0 right-0">
-            <div className="mx-auto w-6 h-6 rounded-full bg-[#E5DEFF]" />
-          </div>
+        <div className="relative w-full h-full flex items-center justify-center">
+          <div className="absolute inset-0 bg-[#E5DEFF] rounded-md opacity-50" />
+          <span className="relative text-[#7E69AB] font-medium">
+            {dayAssignments.length}
+          </span>
         </div>
       );
     }

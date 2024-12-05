@@ -1,10 +1,7 @@
 import { Assignment } from "@/types/assignment";
-import { Plus } from "lucide-react";
-import { Button } from "./ui/button";
 import { useQueryClient } from "@tanstack/react-query";
-import CommentSection from "./CommentSection";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AssignmentCard from "./AssignmentCard";
+import AssignmentHeader from "./AssignmentHeader";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -40,7 +37,6 @@ const AssignmentList = ({
   };
 
   const handleStatusChange = async (assignmentId: string, newStatus: Assignment["status"]) => {
-    const oldAssignments = queryClient.getQueryData(['assignments']) as Assignment[];
     queryClient.setQueryData(['assignments'], (old: Assignment[] | undefined) => {
       if (!old) return old;
       return old.map(assignment => 
@@ -54,7 +50,6 @@ const AssignmentList = ({
   };
 
   const handleDelete = async (assignmentId: string) => {
-    const oldAssignments = queryClient.getQueryData(['assignments']) as Assignment[];
     queryClient.setQueryData(['assignments'], (old: Assignment[] | undefined) => {
       if (!old) return old;
       return old.filter(assignment => assignment.id !== assignmentId);
@@ -65,18 +60,7 @@ const AssignmentList = ({
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-semibold text-[#1A1F2C]">Assignments</h2>
-          <p className="text-sm text-[#8E9196] mt-1">Manage your project tasks</p>
-        </div>
-        {isAdmin && (
-          <Button onClick={onCreateClick} className="bg-[#9b87f5] hover:bg-[#7E69AB]">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Assignment
-          </Button>
-        )}
-      </div>
+      <AssignmentHeader isAdmin={isAdmin} onCreateClick={onCreateClick} />
 
       <div className="space-y-4">
         {assignments.length === 0 ? (
@@ -87,29 +71,15 @@ const AssignmentList = ({
           </div>
         ) : (
           assignments.map((assignment) => (
-            <Dialog key={assignment.id}>
-              <DialogTrigger asChild>
-                <div>
-                  <AssignmentCard
-                    assignment={assignment}
-                    isAdmin={isAdmin}
-                    getPriorityColor={getPriorityColor}
-                    getStatusColor={getStatusColor}
-                    onStatusChange={handleStatusChange}
-                    onDelete={handleDelete}
-                  />
-                </div>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{assignment.title}</DialogTitle>
-                </DialogHeader>
-                <div className="mt-4">
-                  <p className="text-gray-600 mb-4">{assignment.description}</p>
-                  <CommentSection assignmentId={assignment.id} />
-                </div>
-              </DialogContent>
-            </Dialog>
+            <AssignmentCard
+              key={assignment.id}
+              assignment={assignment}
+              isAdmin={isAdmin}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+              onStatusChange={handleStatusChange}
+              onDelete={handleDelete}
+            />
           ))
         )}
       </div>

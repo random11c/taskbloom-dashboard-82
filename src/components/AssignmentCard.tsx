@@ -1,7 +1,7 @@
 import { Assignment } from "@/types/assignment";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
 import AssigneeDisplay from "./AssigneeDisplay";
 import {
@@ -16,6 +16,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import AssignmentStatusSelect from "./AssignmentStatusSelect";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import CommentSection from "./CommentSection";
+import { useState } from "react";
 
 interface AssignmentCardProps {
   assignment: Assignment;
@@ -34,8 +37,10 @@ const AssignmentCard = ({
   onStatusChange,
   onDelete,
 }: AssignmentCardProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex flex-col p-6 bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+    <div className="flex flex-col p-6 bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between">
         <div>
           <h3 className="text-lg font-medium text-[#1A1F2C]">{assignment.title}</h3>
@@ -57,7 +62,6 @@ const AssignmentCard = ({
                 variant="ghost"
                 size="sm"
                 className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
-                onClick={(e) => e.stopPropagation()}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -89,6 +93,15 @@ const AssignmentCard = ({
           getStatusColor={getStatusColor}
         />
       </div>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
+        <CollapsibleTrigger className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
+          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
+          Comments
+        </CollapsibleTrigger>
+        <CollapsibleContent className="mt-4">
+          <CommentSection assignmentId={assignment.id} />
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
