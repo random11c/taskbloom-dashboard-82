@@ -98,8 +98,8 @@ const CalendarPage = () => {
     if (dayAssignments.length > 0) {
       return (
         <div className="relative w-full h-full">
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-            <Badge variant="secondary" className="h-1.5 w-1.5 rounded-full p-0" />
+          <div className="absolute bottom-0 left-0 right-0">
+            <div className="mx-auto w-6 h-6 rounded-full bg-[#E5DEFF]" />
           </div>
         </div>
       );
@@ -133,17 +133,13 @@ const CalendarPage = () => {
                   hasAssignment: (date) => getDayAssignments(date).length > 0
                 }}
                 modifiersStyles={{
-                  hasAssignment: { fontWeight: 'bold' }
+                  hasAssignment: { 
+                    backgroundColor: '#F1F0FB',
+                    color: '#1A1F2C',
+                    fontWeight: 'bold'
+                  }
                 }}
-                components={{
-                  DayContent: ({ date }) => (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span>{date.getDate()}</span>
-                      {modifyDay(date)}
-                    </div>
-                  )
-                }}
-                className="rounded-md border shadow bg-white"
+                className="rounded-md border shadow bg-white p-4"
               />
             </div>
 
@@ -154,22 +150,7 @@ const CalendarPage = () => {
               
               <div className="space-y-4">
                 {selectedDate && getDayAssignments(selectedDate).map(assignment => (
-                  <Dialog key={assignment.id}>
-                    <DialogTrigger asChild>
-                      <div onClick={() => setSelectedAssignment(assignment)} className="cursor-pointer">
-                        <CalendarAssignmentCard assignment={assignment} />
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>{assignment.title}</DialogTitle>
-                      </DialogHeader>
-                      <div className="mt-4">
-                        <p className="text-gray-600 mb-4">{assignment.description}</p>
-                        <CommentSection assignmentId={assignment.id} />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <CalendarAssignmentCard key={assignment.id} assignment={assignment} />
                 ))}
 
                 {selectedDate && getDayAssignments(selectedDate).length === 0 && (
