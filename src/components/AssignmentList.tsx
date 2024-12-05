@@ -1,30 +1,10 @@
 import { Assignment } from "@/types/assignment";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "./ui/button";
-import AssigneeDisplay from "./AssigneeDisplay";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useQueryClient } from "@tanstack/react-query";
 import CommentSection from "./CommentSection";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import AssignmentCard from "./AssignmentCard";
 
 interface AssignmentListProps {
   assignments: Assignment[];
@@ -34,7 +14,13 @@ interface AssignmentListProps {
   isAdmin: boolean;
 }
 
-const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCreateClick, isAdmin }: AssignmentListProps) => {
+const AssignmentList = ({ 
+  assignments, 
+  onStatusChange, 
+  onDeleteAssignment, 
+  onCreateClick, 
+  isAdmin 
+}: AssignmentListProps) => {
   const queryClient = useQueryClient();
 
   const getPriorityColor = (priority: Assignment["priority"]) => {
@@ -109,79 +95,15 @@ const AssignmentList = ({ assignments, onStatusChange, onDeleteAssignment, onCre
           assignments.map((assignment) => (
             <Dialog key={assignment.id}>
               <DialogTrigger asChild>
-                <div className="flex flex-col p-6 bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="text-lg font-medium text-[#1A1F2C]">{assignment.title}</h3>
-                      <p className="text-sm text-[#8E9196] mt-1 line-clamp-2">{assignment.description}</p>
-                      <div className="flex flex-wrap items-center gap-4 mt-4">
-                        <Badge className={getPriorityColor(assignment.priority)}>
-                          {assignment.priority}
-                        </Badge>
-                        <span className="text-sm text-[#8E9196]">
-                          Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
-                        </span>
-                        <AssigneeDisplay assignees={assignment.assignees} />
-                      </div>
-                    </div>
-                    {isAdmin && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this assignment? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(assignment.id)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-6 mt-4">
-                    <Select
-                      value={assignment.status}
-                      onValueChange={(value: Assignment["status"]) =>
-                        handleStatusChange(assignment.id, value)
-                      }
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue>
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-sm ${getStatusColor(
-                              assignment.status
-                            )}`}
-                          >
-                            {assignment.status}
-                          </span>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in-progress">In Progress</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div>
+                  <AssignmentCard
+                    assignment={assignment}
+                    isAdmin={isAdmin}
+                    getPriorityColor={getPriorityColor}
+                    getStatusColor={getStatusColor}
+                    onStatusChange={handleStatusChange}
+                    onDelete={handleDelete}
+                  />
                 </div>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
