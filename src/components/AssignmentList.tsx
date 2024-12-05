@@ -25,23 +25,17 @@ const AssignmentList = ({
 
   const getPriorityColor = (priority: Assignment["priority"]) => {
     switch (priority) {
-      case "high":
-        return "text-red-600 bg-red-100";
-      case "medium":
-        return "text-[#7E69AB] bg-[#E5DEFF]";
-      case "low":
-        return "text-[#6E59A5] bg-[#F1F0FB]";
+      case "high": return "text-red-600 bg-red-100";
+      case "medium": return "text-[#7E69AB] bg-[#E5DEFF]";
+      case "low": return "text-[#6E59A5] bg-[#F1F0FB]";
     }
   };
 
   const getStatusColor = (status: Assignment["status"]) => {
     switch (status) {
-      case "completed":
-        return "bg-[#E5DEFF] text-[#7E69AB]";
-      case "in-progress":
-        return "bg-[#F1F0FB] text-[#6E59A5]";
-      case "pending":
-        return "bg-gray-100 text-gray-800";
+      case "completed": return "bg-[#E5DEFF] text-[#7E69AB]";
+      case "in-progress": return "bg-[#F1F0FB] text-[#6E59A5]";
+      case "pending": return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -106,7 +100,7 @@ const AssignmentList = ({
                   />
                 </div>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{assignment.title}</DialogTitle>
                 </DialogHeader>
