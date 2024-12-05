@@ -40,68 +40,79 @@ const AssignmentCard = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col p-6 bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between">
-        <div>
-          <h3 className="text-lg font-medium text-[#1A1F2C]">{assignment.title}</h3>
-          <p className="text-sm text-[#8E9196] mt-1 line-clamp-2">{assignment.description}</p>
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            <Badge className={getPriorityColor(assignment.priority)}>
-              {assignment.priority}
-            </Badge>
-            <span className="text-sm text-[#8E9196]">
-              Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
-            </span>
-            <AssigneeDisplay assignees={assignment.assignees} />
+    <div className="bg-white border border-[#E5DEFF] rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="p-5 space-y-4">
+        {/* Header Section */}
+        <div className="flex justify-between items-start">
+          <div className="space-y-2 flex-1">
+            <h3 className="text-lg font-semibold text-[#1A1F2C] leading-tight">
+              {assignment.title}
+            </h3>
+            <p className="text-sm text-[#8E9196] line-clamp-2">
+              {assignment.description}
+            </p>
           </div>
-        </div>
-        {isAdmin && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this assignment? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(assignment.id)}
-                  className="bg-red-500 hover:bg-red-600"
+          {isAdmin && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 ml-4"
                 >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
-      <div className="flex items-center gap-6 mt-4">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete this assignment? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDelete(assignment.id)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+
+        {/* Meta Information */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge className={`${getPriorityColor(assignment.priority)} px-2 py-0.5`}>
+            {assignment.priority}
+          </Badge>
+          <span className="text-sm text-[#8E9196] flex items-center">
+            Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
+          </span>
+          <AssigneeDisplay assignees={assignment.assignees} />
+        </div>
+
+        {/* Status Select */}
         <AssignmentStatusSelect
           status={assignment.status}
           onStatusChange={(value) => onStatusChange(assignment.id, value)}
           getStatusColor={getStatusColor}
         />
+
+        {/* Comments Section */}
+        <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm text-[#6E59A5] hover:text-[#7E69AB] transition-colors">
+            <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} />
+            Comments
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-4">
+            <CommentSection assignmentId={assignment.id} />
+          </CollapsibleContent>
+        </Collapsible>
       </div>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mt-4">
-        <CollapsibleTrigger className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900">
-          <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'transform rotate-180' : ''}`} />
-          Comments
-        </CollapsibleTrigger>
-        <CollapsibleContent className="mt-4">
-          <CommentSection assignmentId={assignment.id} />
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 };

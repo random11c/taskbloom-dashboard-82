@@ -22,9 +22,9 @@ const AssignmentList = ({
 
   const getPriorityColor = (priority: Assignment["priority"]) => {
     switch (priority) {
-      case "high": return "text-red-600 bg-red-100";
-      case "medium": return "text-[#7E69AB] bg-[#E5DEFF]";
-      case "low": return "text-[#6E59A5] bg-[#F1F0FB]";
+      case "high": return "bg-red-100 text-red-700 border-red-200";
+      case "medium": return "bg-[#E5DEFF] text-[#7E69AB] border-[#D6BCFA]";
+      case "low": return "bg-[#F1F0FB] text-[#6E59A5] border-[#E5DEFF]";
     }
   };
 
@@ -32,7 +32,7 @@ const AssignmentList = ({
     switch (status) {
       case "completed": return "bg-[#E5DEFF] text-[#7E69AB]";
       case "in-progress": return "bg-[#F1F0FB] text-[#6E59A5]";
-      case "pending": return "bg-gray-100 text-gray-800";
+      case "pending": return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -64,23 +64,25 @@ const AssignmentList = ({
 
       <div className="space-y-4">
         {assignments.length === 0 ? (
-          <div className="text-center py-12 bg-[#F1F0FB] rounded-lg">
+          <div className="text-center py-12 bg-[#F1F0FB] rounded-lg border border-[#E5DEFF]">
             <p className="text-[#8E9196]">
               No assignments created yet. {isAdmin && "Create your first assignment to get started!"}
             </p>
           </div>
         ) : (
-          assignments.map((assignment) => (
-            <AssignmentCard
-              key={assignment.id}
-              assignment={assignment}
-              isAdmin={isAdmin}
-              getPriorityColor={getPriorityColor}
-              getStatusColor={getStatusColor}
-              onStatusChange={handleStatusChange}
-              onDelete={handleDelete}
-            />
-          ))
+          <div className="grid gap-4">
+            {assignments.map((assignment) => (
+              <AssignmentCard
+                key={assignment.id}
+                assignment={assignment}
+                isAdmin={isAdmin}
+                getPriorityColor={getPriorityColor}
+                getStatusColor={getStatusColor}
+                onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
