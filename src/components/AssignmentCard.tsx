@@ -1,9 +1,7 @@
 import { Assignment } from "@/types/assignment";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
 import { Trash2, ChevronDown } from "lucide-react";
 import { Button } from "./ui/button";
-import AssigneeDisplay from "./AssigneeDisplay";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +17,7 @@ import AssignmentStatusSelect from "./AssignmentStatusSelect";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 import CommentSection from "./CommentSection";
 import { useState } from "react";
+import { AssignmentDetails } from "./AssignmentDetails";
 
 interface AssignmentCardProps {
   assignment: Assignment;
@@ -89,10 +88,7 @@ const AssignmentCard = ({
           <Badge className={`${getPriorityColor(assignment.priority)} px-2 py-0.5`}>
             {assignment.priority}
           </Badge>
-          <span className="text-sm text-[#8E9196] flex items-center">
-            Due: {format(new Date(assignment.dueDate), "MMM d, yyyy")}
-          </span>
-          <AssigneeDisplay assignees={assignment.assignees} />
+          <AssignmentDetails assignment={assignment} isAdmin={isAdmin} />
         </div>
 
         {/* Status Select */}
