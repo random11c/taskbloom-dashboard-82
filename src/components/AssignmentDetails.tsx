@@ -3,7 +3,7 @@ import { Badge } from "./ui/badge";
 import { format } from "date-fns";
 import AssigneeDisplay from "./AssigneeDisplay";
 import { FileText, Paperclip } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 import { Button } from "./ui/button";
@@ -25,6 +25,10 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    fetchAttachments();
+  }, [assignment.id]);
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -40,6 +44,8 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
 
       if (uploadError) throw uploadError;
 
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { error: dbError } = await supabase
         .from('assignment_attachments')
         .insert({
@@ -48,7 +54,7 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
           file_path: filePath,
           content_type: file.type,
           size: file.size,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: user?.id
         });
 
       if (dbError) throw dbError;
@@ -58,7 +64,6 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
         description: `${file.name} has been attached to the assignment.`
       });
 
-      // Refresh attachments list
       fetchAttachments();
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -75,7 +80,7 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
   const fetchAttachments = async () => {
     const { data, error } = await supabase
       .from('assignment_attachments')
-      .select('*')
+      .select('id, filename, content_type, file_path')
       .eq('assignment_id', assignment.id);
 
     if (error) {
@@ -94,7 +99,6 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
 
       if (error) throw error;
 
-      // Create a download link
       const url = window.URL.createObjectURL(data);
       const link = document.createElement('a');
       link.href = url;
