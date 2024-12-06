@@ -7,18 +7,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./ui/use-toast";
 import { Button } from "./ui/button";
+import { Database } from "@/integrations/supabase/types";
 
 interface AssignmentDetailsProps {
   assignment: Assignment;
   isAdmin: boolean;
 }
 
-interface FileAttachment {
-  id: string;
-  filename: string;
-  content_type: string;
-  file_path: string;
-}
+type FileAttachment = Database['public']['Tables']['assignment_attachments']['Row'];
 
 export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProps) => {
   const [attachments, setAttachments] = useState<FileAttachment[]>([]);
@@ -88,7 +84,7 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
       return;
     }
 
-    setAttachments(data);
+    setAttachments(data || []);
   };
 
   const downloadFile = async (attachment: FileAttachment) => {

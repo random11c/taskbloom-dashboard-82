@@ -39,6 +39,54 @@ export type Database = {
           },
         ]
       }
+      assignment_attachments: {
+        Row: {
+          assignment_id: string
+          content_type: string
+          created_at: string
+          created_by: string | null
+          file_path: string
+          filename: string
+          id: string
+          size: number
+        }
+        Insert: {
+          assignment_id: string
+          content_type: string
+          created_at?: string
+          created_by?: string | null
+          file_path: string
+          filename: string
+          id?: string
+          size: number
+        }
+        Update: {
+          assignment_id?: string
+          content_type?: string
+          created_at?: string
+          created_by?: string | null
+          file_path?: string
+          filename?: string
+          id?: string
+          size?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_attachments_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assignment_attachments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           created_at: string
