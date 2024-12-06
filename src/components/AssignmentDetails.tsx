@@ -76,7 +76,7 @@ export const AssignmentDetails = ({ assignment, isAdmin }: AssignmentDetailsProp
   const fetchAttachments = async () => {
     const { data, error } = await supabase
       .from('assignment_attachments')
-      .select('id, filename, content_type, file_path')
+      .select('*')
       .eq('assignment_id', assignment.id);
 
     if (error) {
